@@ -1,0 +1,24 @@
+{
+  "version": "independent",
+  "npmClient": "npm",
+  "command": {
+    "publish": {
+      "conventionalCommits": true,
+      "message": "chore(release): publish",
+      "registry": "https://registry.npmjs.org",
+      "allowBranch": ["main", "release/*"]
+    },
+    "version": {
+      "allowBranch": ["main", "release/*"],
+      "conventionalCommits": true,
+      "message": "chore(release): version"
+    },
+    "bootstrap": {
+      "hoist": true
+    }
+  },
+  "packages": [
+    "packages/*",
+    "examples/*"
+  ]
+}

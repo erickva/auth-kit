@@ -1,0 +1,50 @@
+{
+  "name": "auth-kit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A comprehensive authentication kit for modern web applications",
+  "keywords": [
+    "authentication",
+    "jwt",
+    "passkeys",
+    "webauthn",
+    "2fa",
+    "react",
+    "nextjs",
+    "fastapi"
+  ],
+  "homepage": "https://github.com/yourusername/auth-kit",
+  "bugs": {
+    "url": "https://github.com/yourusername/auth-kit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/auth-kit.git"
+  },
+  "license": "MIT",
+  "author": "Your Name <your.email@example.com>",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "dev": "lerna run dev --parallel",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "clean": "lerna clean -y && lerna run clean",
+    "publish": "lerna publish",
+    "version": "lerna version",
+    "bootstrap": "lerna bootstrap",
+    "example:nextjs": "cd examples/nextjs-fullstack && npm run dev",
+    "example:react-spa": "cd examples/react-spa && npm run dev",
+    "example:multi-tenant": "cd examples/multi-tenant && npm run dev"
+  },
+  "devDependencies": {
+    "lerna": "^8.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  }
+}

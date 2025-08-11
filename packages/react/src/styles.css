@@ -1,0 +1,250 @@
+/**
+ * Default styles for Auth Kit components
+ * 
+ * These styles use CSS custom properties for easy theming.
+ * Override these variables in your own CSS to customize the look.
+ */
+
+:root {
+  /* Colors */
+  --auth-kit-primary: #3b82f6;
+  --auth-kit-primary-hover: #2563eb;
+  --auth-kit-secondary: #6b7280;
+  --auth-kit-secondary-hover: #4b5563;
+  --auth-kit-error: #ef4444;
+  --auth-kit-success: #10b981;
+  --auth-kit-warning: #f59e0b;
+  --auth-kit-info: #3b82f6;
+  
+  /* Text colors */
+  --auth-kit-text-primary: #111827;
+  --auth-kit-text-secondary: #6b7280;
+  --auth-kit-text-error: #dc2626;
+  
+  /* Background colors */
+  --auth-kit-bg-primary: #ffffff;
+  --auth-kit-bg-secondary: #f9fafb;
+  --auth-kit-bg-hover: #f3f4f6;
+  
+  /* Border colors */
+  --auth-kit-border: #e5e7eb;
+  --auth-kit-border-focus: #3b82f6;
+  
+  /* Spacing */
+  --auth-kit-spacing-xs: 0.25rem;
+  --auth-kit-spacing-sm: 0.5rem;
+  --auth-kit-spacing-md: 1rem;
+  --auth-kit-spacing-lg: 1.5rem;
+  --auth-kit-spacing-xl: 2rem;
+  
+  /* Border radius */
+  --auth-kit-radius-sm: 0.25rem;
+  --auth-kit-radius-md: 0.375rem;
+  --auth-kit-radius-lg: 0.5rem;
+  
+  /* Font sizes */
+  --auth-kit-font-xs: 0.75rem;
+  --auth-kit-font-sm: 0.875rem;
+  --auth-kit-font-md: 1rem;
+  --auth-kit-font-lg: 1.125rem;
+  
+  /* Transitions */
+  --auth-kit-transition: all 0.15s ease-in-out;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --auth-kit-text-primary: #f9fafb;
+    --auth-kit-text-secondary: #9ca3af;
+    --auth-kit-bg-primary: #111827;
+    --auth-kit-bg-secondary: #1f2937;
+    --auth-kit-bg-hover: #374151;
+    --auth-kit-border: #374151;
+  }
+}
+
+/* Form groups */
+.auth-kit-form-group {
+  margin-bottom: var(--auth-kit-spacing-md);
+}
+
+/* Labels */
+.auth-kit-label {
+  display: block;
+  margin-bottom: var(--auth-kit-spacing-xs);
+  font-size: var(--auth-kit-font-sm);
+  font-weight: 500;
+  color: var(--auth-kit-text-primary);
+}
+
+/* Inputs */
+.auth-kit-input {
+  width: 100%;
+  padding: var(--auth-kit-spacing-sm) var(--auth-kit-spacing-md);
+  font-size: var(--auth-kit-font-md);
+  color: var(--auth-kit-text-primary);
+  background-color: var(--auth-kit-bg-primary);
+  border: 1px solid var(--auth-kit-border);
+  border-radius: var(--auth-kit-radius-md);
+  transition: var(--auth-kit-transition);
+}
+
+.auth-kit-input:focus {
+  outline: none;
+  border-color: var(--auth-kit-border-focus);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.auth-kit-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Buttons */
+.auth-kit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--auth-kit-spacing-sm) var(--auth-kit-spacing-lg);
+  font-size: var(--auth-kit-font-md);
+  font-weight: 500;
+  border-radius: var(--auth-kit-radius-md);
+  transition: var(--auth-kit-transition);
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  margin-bottom: var(--auth-kit-spacing-sm);
+}
+
+.auth-kit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-kit-button-primary {
+  color: white;
+  background-color: var(--auth-kit-primary);
+}
+
+.auth-kit-button-primary:hover:not(:disabled) {
+  background-color: var(--auth-kit-primary-hover);
+}
+
+.auth-kit-button-secondary {
+  color: var(--auth-kit-text-primary);
+  background-color: var(--auth-kit-bg-secondary);
+  border: 1px solid var(--auth-kit-border);
+}
+
+.auth-kit-button-secondary:hover:not(:disabled) {
+  background-color: var(--auth-kit-bg-hover);
+}
+
+.auth-kit-button-text {
+  color: var(--auth-kit-primary);
+  background-color: transparent;
+  padding: var(--auth-kit-spacing-xs);
+}
+
+.auth-kit-button-text:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+/* Checkboxes */
+.auth-kit-checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: var(--auth-kit-font-sm);
+  color: var(--auth-kit-text-primary);
+  cursor: pointer;
+}
+
+.auth-kit-checkbox {
+  margin-right: var(--auth-kit-spacing-sm);
+  cursor: pointer;
+}
+
+/* Links */
+.auth-kit-link {
+  color: var(--auth-kit-primary);
+  text-decoration: none;
+  font-size: var(--auth-kit-font-sm);
+  transition: var(--auth-kit-transition);
+}
+
+.auth-kit-link:hover {
+  text-decoration: underline;
+}
+
+/* Errors */
+.auth-kit-error {
+  margin-top: var(--auth-kit-spacing-xs);
+  font-size: var(--auth-kit-font-sm);
+  color: var(--auth-kit-text-error);
+}
+
+/* Alerts */
+.auth-kit-alert {
+  padding: var(--auth-kit-spacing-md);
+  margin-bottom: var(--auth-kit-spacing-md);
+  border-radius: var(--auth-kit-radius-md);
+  font-size: var(--auth-kit-font-sm);
+}
+
+.auth-kit-alert-error {
+  color: var(--auth-kit-error);
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.auth-kit-alert-success {
+  color: var(--auth-kit-success);
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Form actions */
+.auth-kit-form-actions {
+  margin-top: var(--auth-kit-spacing-lg);
+}
+
+/* Form footer */
+.auth-kit-form-footer {
+  margin-top: var(--auth-kit-spacing-lg);
+  text-align: center;
+  font-size: var(--auth-kit-font-sm);
+  color: var(--auth-kit-text-secondary);
+}
+
+/* Password strength */
+.auth-kit-password-strength {
+  margin-top: var(--auth-kit-spacing-sm);
+}
+
+.auth-kit-password-strength-bar {
+  height: 4px;
+  background-color: var(--auth-kit-bg-secondary);
+  border-radius: var(--auth-kit-radius-sm);
+  overflow: hidden;
+}
+
+.auth-kit-password-strength-fill {
+  height: 100%;
+  transition: width 0.3s ease-in-out;
+}
+
+.auth-kit-password-strength-label {
+  margin-top: var(--auth-kit-spacing-xs);
+  font-size: var(--auth-kit-font-xs);
+  font-weight: 500;
+}
+
+/* Loading */
+.auth-kit-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--auth-kit-spacing-xl);
+  color: var(--auth-kit-text-secondary);
+}
