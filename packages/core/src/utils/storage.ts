@@ -53,11 +53,11 @@ export class AuthStorage {
           const options = this.cookieOptions;
           let cookie = `${key}=${encodeURIComponent(value)}`;
           
-          if (options.domain) cookie += `; domain=${options.domain}`;
-          if (options.path) cookie += `; path=${options.path}`;
-          if (options.maxAge) cookie += `; max-age=${options.maxAge}`;
-          if (options.secure) cookie += '; secure';
-          if (options.sameSite) cookie += `; samesite=${options.sameSite}`;
+          if (options?.domain) cookie += `; domain=${options.domain}`;
+          if (options?.path) cookie += `; path=${options.path}`;
+          if (options?.maxAge) cookie += `; max-age=${options.maxAge}`;
+          if (options?.secure) cookie += '; secure';
+          if (options?.sameSite) cookie += `; samesite=${options.sameSite}`;
           
           document.cookie = cookie;
         } else {

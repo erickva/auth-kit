@@ -7,7 +7,6 @@ import {
   PasswordChangeData,
   PasswordResetData,
   PasswordResetConfirmData,
-  ProfileUpdateData,
   DEFAULT_ENDPOINTS,
   AuthConfig
 } from '@auth-kit/core';

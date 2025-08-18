@@ -21,7 +21,7 @@
     "auth",
     "typescript"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Erick Ama <me@erick.no>",
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^29.0.0",

@@ -13,16 +13,16 @@
     "nextjs",
     "fastapi"
   ],
-  "homepage": "https://github.com/yourusername/auth-kit",
+  "homepage": "https://github.com/erickva/auth-kit",
   "bugs": {
-    "url": "https://github.com/yourusername/auth-kit/issues"
+    "url": "https://github.com/erickva/auth-kit/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/auth-kit.git"
+    "url": "git+https://github.com/erickva/auth-kit.git"
   },
   "license": "MIT",
-  "author": "Your Name <your.email@example.com>",
+  "author": "Erick Ama <me@erick.no>",
   "workspaces": [
     "packages/*",
     "examples/*"

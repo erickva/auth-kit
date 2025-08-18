@@ -25,14 +25,14 @@ export interface PasskeyRegistrationOptions {
     displayName: string;
   };
   pubKeyCredParams: Array<{
-    type: string;
+    type: 'public-key';
     alg: number;
   }>;
   timeout?: number;
   attestation?: 'none' | 'indirect' | 'direct' | 'enterprise';
   excludeCredentials?: Array<{
     id: string;
-    type: string;
+    type: 'public-key';
     transports?: AuthenticatorTransport[];
   }>;
   authenticatorSelection?: {
@@ -48,7 +48,7 @@ export interface PasskeyAuthenticationOptions {
   rpId?: string;
   allowCredentials?: Array<{
     id: string;
-    type: string;
+    type: 'public-key';
     transports?: AuthenticatorTransport[];
   }>;
   userVerification?: 'discouraged' | 'preferred' | 'required';

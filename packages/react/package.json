@@ -24,7 +24,7 @@
     "hooks",
     "components"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Erick Ama <me@erick.no>",
   "license": "MIT",
   "peerDependencies": {
     "react": ">=16.8.0",
@@ -39,7 +39,6 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@testing-library/react": "^14.0.0",
-    "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",

@@ -4,8 +4,8 @@
   "description": "React SPA example using @auth-kit/react",
   "private": true,
   "dependencies": {
-    "@auth-kit/core": "workspace:*",
-    "@auth-kit/react": "workspace:*",
+    "@auth-kit/core": "file:../../packages/core",
+    "@auth-kit/react": "file:../../packages/react",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",

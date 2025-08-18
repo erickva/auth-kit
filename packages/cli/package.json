@@ -25,7 +25,7 @@
     "scaffold",
     "generator"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Erick Ama <me@erick.no>",
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.3.0",
