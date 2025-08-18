@@ -5,9 +5,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="auth-kit-fastapi",
-    version="1.0.0",
+    version="0.1.0",
     author="Erick Ama",
-    author_email="eu@erick.no",
+    author_email="me@erick.no",
     description="FastAPI authentication backend for Auth Kit",
     long_description=long_description,
     long_description_content_type="text/markdown",

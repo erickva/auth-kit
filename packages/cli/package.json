@@ -1,6 +1,6 @@
 {
   "name": "@auth-kit/cli",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "CLI tool for scaffolding Auth Kit projects",
   "bin": {
     "auth-kit": "./dist/index.js",
