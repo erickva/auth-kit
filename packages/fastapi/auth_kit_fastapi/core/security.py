@@ -3,7 +3,7 @@ Security utilities for JWT and password handling
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from uuid import uuid4
 import secrets
 from jose import JWTError, jwt
