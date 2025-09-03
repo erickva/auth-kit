@@ -259,7 +259,7 @@ class PasskeyService:
         
         if user_email:
             # Find user by email
-            user = self.db.query(BaseUser).filter(
+            user = self.db.query(self.config.user_model).filter(
                 BaseUser.email == user_email
             ).first()
             
@@ -323,7 +323,7 @@ class PasskeyService:
                 raise ValueError("Credential not found")
                 
             # Get user
-            user = self.db.query(BaseUser).filter(
+            user = self.db.query(self.config.user_model).filter(
                 BaseUser.id == credential_record.user_id
             ).first()
             
@@ -401,8 +401,8 @@ class PasskeyService:
             return False
             
         # Check if user has other auth methods
-        user = self.db.query(BaseUser).filter(
-            BaseUser.id == user_id
+        user = self.db.query(self.config.user_model).filter(
+            self.config.user_model.id == user_id
         ).first()
         
         if not user:

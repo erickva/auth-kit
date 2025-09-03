@@ -68,7 +68,9 @@ async def get_current_user(
         raise credentials_exception
     
     # Get user from database
-    user = db.query(BaseUser).filter(BaseUser.id == user_id).first()
+    config = request.app.state.config
+    User = config.user_model
+    user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
         

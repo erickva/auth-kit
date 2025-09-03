@@ -54,8 +54,9 @@ async def register(
 ):
     """Register a new user"""
     # Check if user exists
-    existing_user = db.query(BaseUser).filter(
-        BaseUser.email == user_data.email
+    User = config.user_model
+    existing_user = db.query(User).filter(
+        User.email == user_data.email
     ).first()
     
     if existing_user:
@@ -65,7 +66,7 @@ async def register(
         )
     
     # Create new user
-    new_user = BaseUser(
+    new_user = User(
         email=user_data.email,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
@@ -99,8 +100,9 @@ async def login(
 ):
     """Login with email and password"""
     # Find user by email
-    user = db.query(BaseUser).filter(
-        BaseUser.email == form_data.username
+    User = config.user_model
+    user = db.query(User).filter(
+        User.email == form_data.username
     ).first()
     
     if not user or not user.verify_password(form_data.password):
@@ -223,7 +225,8 @@ async def refresh_token(
             raise ValueError("Session expired or not found")
         
         # Get user
-        user = db.query(BaseUser).filter(BaseUser.id == user_id).first()
+        User = config.user_model
+        user = db.query(User).filter(User.id == user_id).first()
         if not user or not user.is_active:
             raise ValueError("User not found or inactive")
         
@@ -366,8 +369,9 @@ async def request_password_reset(
 ):
     """Request password reset"""
     # Find user
-    user = db.query(BaseUser).filter(
-        BaseUser.email == reset_data.email
+    User = config.user_model
+    user = db.query(User).filter(
+        User.email == reset_data.email
     ).first()
     
     # Always return success to prevent email enumeration
@@ -409,8 +413,9 @@ async def confirm_password_reset(
         )
     
     # Find user
-    user = db.query(BaseUser).filter(
-        BaseUser.email == email
+    User = config.user_model
+    user = db.query(User).filter(
+        User.email == email
     ).first()
     
     if not user:
@@ -456,8 +461,9 @@ async def verify_email(
         )
     
     # Find user
-    user = db.query(BaseUser).filter(
-        BaseUser.email == email
+    User = config.user_model
+    user = db.query(User).filter(
+        User.email == email
     ).first()
     
     if not user:

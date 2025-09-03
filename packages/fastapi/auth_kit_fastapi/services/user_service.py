@@ -25,14 +25,16 @@ class UserService:
     Handles user CRUD operations, authentication, and session management
     """
     
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_model=None):
         """
         Initialize user service
         
         Args:
             db: Database session
+            user_model: Concrete User model class
         """
         self.db = db
+        self.user_model = user_model or BaseUser
         
     async def create_user(
         self,
@@ -60,7 +62,7 @@ class UserService:
             raise ValueError("Email already registered")
         
         # Create new user
-        user = BaseUser(
+        user = self.user_model(
             email=user_data.email,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
@@ -93,7 +95,7 @@ class UserService:
         Returns:
             User or None
         """
-        return self.db.query(BaseUser).filter(
+        return self.db.query(self.user_model).filter(
             BaseUser.id == user_id
         ).first()
         
@@ -107,7 +109,7 @@ class UserService:
         Returns:
             User or None
         """
-        return self.db.query(BaseUser).filter(
+        return self.db.query(self.user_model).filter(
             BaseUser.email == email
         ).first()
         
@@ -398,7 +400,7 @@ class UserService:
         """
         search_term = f"%{query}%"
         
-        return self.db.query(BaseUser).filter(
+        return self.db.query(self.user_model).filter(
             or_(
                 BaseUser.email.ilike(search_term),
                 BaseUser.first_name.ilike(search_term),

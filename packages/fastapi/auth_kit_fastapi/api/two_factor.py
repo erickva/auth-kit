@@ -270,7 +270,8 @@ async def verify_2fa_login(
         )
     
     # Get user
-    user = db.query(BaseUser).filter(BaseUser.id == user_id).first()
+    User = config.user_model
+    user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

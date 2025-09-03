@@ -181,8 +181,9 @@ async def begin_authentication(
     
     if auth_data.email:
         # Find user by email
-        user = db.query(BaseUser).filter(
-            BaseUser.email == auth_data.email
+        User = config.user_model
+        user = db.query(User).filter(
+            User.email == auth_data.email
         ).first()
         
         if user:
@@ -242,8 +243,9 @@ async def complete_authentication(
         )
     
     # Get user
-    user = db.query(BaseUser).filter(
-        BaseUser.id == credential.user_id
+    User = config.user_model
+    user = db.query(User).filter(
+        User.id == credential.user_id
     ).first()
     
     if not user or not user.is_active:

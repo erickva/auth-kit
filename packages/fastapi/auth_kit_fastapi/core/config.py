@@ -2,13 +2,16 @@
 Configuration for Auth Kit FastAPI
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Type
 from pydantic_settings import BaseSettings
 from pydantic import Field, validator
 
 
 class AuthConfig(BaseSettings):
     """Authentication configuration"""
+    
+    # User Model
+    user_model: Optional[Type[Any]] = Field(None, description="Concrete User model class")
     
     # Database
     database_url: str = Field(..., description="Database connection URL")
@@ -75,6 +78,13 @@ class AuthConfig(BaseSettings):
     
     # Session Settings
     session_lifetime_seconds: int = Field(86400, description="Session lifetime in seconds")
+    
+    @validator("user_model")
+    def validate_user_model(cls, v):
+        """Validate that user_model is provided and is a proper class"""
+        if v is None:
+            raise ValueError("user_model must be provided")
+        return v
     
     @validator("features")
     def validate_features(cls, v):
