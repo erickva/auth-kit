@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include requirements.txt
+include requirements-dev.txt
+recursive-include auth_kit_fastapi *.py
+recursive-include auth_kit_fastapi *.json
+recursive-include auth_kit_fastapi *.html
+recursive-include auth_kit_fastapi *.txt
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store

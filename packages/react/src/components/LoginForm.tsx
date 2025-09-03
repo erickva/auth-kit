@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth, usePasskey } from '../hooks';
-import { validateEmail, validatePassword } from '@auth-kit/core';
+import { validateEmail, validatePassword } from '@erickva/auth-kit-core';
 
 export interface LoginFormProps {
   onSuccess?: () => void;

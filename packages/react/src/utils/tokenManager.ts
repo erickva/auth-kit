@@ -6,7 +6,7 @@ import {
   calculateTokenRefreshTime,
   DEFAULT_STORAGE_KEYS,
   TOKEN_SETTINGS
-} from '@auth-kit/core';
+} from '@erickva/auth-kit-core';
 import { authAPI } from '../api/auth';
 
 class TokenManager {

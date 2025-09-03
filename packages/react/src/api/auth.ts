@@ -9,7 +9,7 @@ import {
   PasswordResetConfirmData,
   DEFAULT_ENDPOINTS,
   AuthConfig
-} from '@auth-kit/core';
+} from '@erickva/auth-kit-core';
 
 export interface ProfileUpdateData {
   firstName?: string;

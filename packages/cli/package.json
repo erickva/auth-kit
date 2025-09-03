@@ -1,5 +1,5 @@
 {
-  "name": "@auth-kit/cli",
+  "name": "@erickva/auth-kit-cli",
   "version": "0.1.0",
   "description": "CLI tool for scaffolding Auth Kit projects",
   "bin": {

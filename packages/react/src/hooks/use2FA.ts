@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { twoFactorAPI } from '../api/twoFactor';
-import { TwoFactorSetupResponse, TwoFactorEnableResponse, authEvents } from '@auth-kit/core';
+import { TwoFactorSetupResponse, TwoFactorEnableResponse, authEvents } from '@erickva/auth-kit-core';
 
 export interface Use2FAReturn {
   isEnabled: boolean;

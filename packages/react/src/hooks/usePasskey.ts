@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { browserSupportsWebAuthn, startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import { useAuth } from '../contexts/AuthContext';
 import { passkeyAPI } from '../api/passkey';
-import { Passkey, authEvents } from '@auth-kit/core';
+import { Passkey, authEvents } from '@erickva/auth-kit-core';
 
 export interface UsePasskeyReturn {
   passkeys: Passkey[];

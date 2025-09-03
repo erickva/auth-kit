@@ -12,7 +12,7 @@ import {
   DEFAULT_STORAGE_KEYS,
   calculateTokenRefreshTime,
   isTokenExpired
-} from '@auth-kit/core';
+} from '@erickva/auth-kit-core';
 import { authAPI } from '../api/auth';
 import { tokenManager } from '../utils/tokenManager';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@auth-kit/core",
+  "name": "@erickva/auth-kit-core",
   "version": "0.1.0",
   "description": "Core authentication logic and types for Auth Kit",
   "main": "dist/index.js",

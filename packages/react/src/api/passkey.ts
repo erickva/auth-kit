@@ -4,7 +4,7 @@ import {
   PasskeyAuthenticationOptions,
   DEFAULT_ENDPOINTS,
   AuthConfig
-} from '@auth-kit/core';
+} from '@erickva/auth-kit-core';
 
 interface PasskeyListResponse {
   passkeys: Passkey[];

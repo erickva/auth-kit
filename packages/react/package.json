@@ -1,5 +1,5 @@
 {
-  "name": "@auth-kit/react",
+  "name": "@erickva/auth-kit-react",
   "version": "0.1.0",
   "description": "React components and hooks for Auth Kit",
   "main": "dist/index.js",
@@ -31,7 +31,7 @@
     "react-dom": ">=16.8.0"
   },
   "dependencies": {
-    "@auth-kit/core": "^0.1.0",
+    "@erickva/auth-kit-core": "^0.1.0",
     "@simplewebauthn/browser": "^8.0.0"
   },
   "devDependencies": {

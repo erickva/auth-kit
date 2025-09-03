@@ -4,7 +4,7 @@ import {
   RecoveryCodesResponse,
   DEFAULT_ENDPOINTS,
   AuthConfig
-} from '@auth-kit/core';
+} from '@erickva/auth-kit-core';
 
 class TwoFactorAPI {
   private baseUrl: string = '';

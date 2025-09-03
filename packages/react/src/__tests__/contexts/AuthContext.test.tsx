@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../contexts/AuthContext';
-import { StorageType } from '@auth-kit/core';
+import { StorageType } from '@erickva/auth-kit-core';
 
 // Mock fetch
 const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;

@@ -31,7 +31,7 @@ export type {
   AuthTokens,
   AuthEventType,
   AuthEvent
-} from '@auth-kit/core';
+} from '@erickva/auth-kit-core';
 
 // Package version
 export const VERSION = '1.0.0';

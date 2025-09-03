@@ -2,7 +2,7 @@ import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { AuthProvider } from '../../contexts/AuthContext';
 import { usePasskey } from '../../hooks/usePasskey';
-import { StorageType } from '@auth-kit/core';
+import { StorageType } from '@erickva/auth-kit-core';
 
 // Mock WebAuthn API
 const mockNavigatorCredentials = {
