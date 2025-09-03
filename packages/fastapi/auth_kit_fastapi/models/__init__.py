@@ -2,9 +2,10 @@
 Database models for Auth Kit FastAPI
 """
 
-from .user import BaseUser, User
+from .user import BaseUser, UserCredential, UserSession
 
 __all__ = [
     "BaseUser",
-    "User"
+    "UserCredential", 
+    "UserSession"
 ]
