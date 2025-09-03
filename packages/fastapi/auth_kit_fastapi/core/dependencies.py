@@ -4,6 +4,7 @@ FastAPI dependencies for authentication
 
 from typing import Optional, Annotated
 from datetime import datetime, timezone
+from uuid import UUID
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -70,7 +71,12 @@ async def get_current_user(
     # Get user from database
     config = request.app.state.config
     User = config.user_model
-    user = db.query(User).filter(User.id == user_id).first()
+    try:
+        user_uuid = UUID(user_id)
+    except ValueError:
+        raise credentials_exception
+    
+    user = db.query(User).filter(User.id == user_uuid).first()
     if user is None:
         raise credentials_exception
         
