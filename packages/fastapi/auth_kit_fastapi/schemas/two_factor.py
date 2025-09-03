@@ -16,7 +16,7 @@ class TwoFactorSetupResponse(BaseModel):
 
 class TwoFactorVerifyRequest(BaseModel):
     """Verify 2FA code"""
-    code: str = Field(..., regex="^[0-9]{6}$")
+    code: str = Field(..., pattern="^[0-9]{6}$")
     
     @validator('code')
     def validate_code(cls, v):
