@@ -16,6 +16,7 @@ from webauthn import (
     verify_authentication_response,
     options_to_json
 )
+from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
 from webauthn.helpers.structs import (
     PublicKeyCredentialDescriptor,
     AuthenticatorTransport,
@@ -101,7 +102,7 @@ async def begin_registration(
     )
     
     # Store challenge in session/cache (simplified - use Redis in production)
-    request.session["passkey_challenge"] = base64.b64encode(options.challenge).decode()
+    request.session["passkey_challenge"] = bytes_to_base64url(options.challenge)
     
     # Convert to JSON-serializable format
     return json.loads(options_to_json(options))
@@ -132,9 +133,9 @@ async def complete_registration(
     
     # Verify registration
     try:
-        # Decode challenge if it's base64 encoded (handles both base64 and base64url)
+        # Decode challenge from base64url format (WebAuthn standard)
         if isinstance(expected_challenge, str):
-            expected_challenge_bytes = base64.urlsafe_b64decode(expected_challenge)
+            expected_challenge_bytes = base64url_to_bytes(expected_challenge)
         else:
             expected_challenge_bytes = expected_challenge
             
@@ -224,7 +225,7 @@ async def begin_authentication(
     )
     
     # Store challenge
-    request.session["auth_challenge"] = base64.b64encode(options.challenge).decode()
+    request.session["auth_challenge"] = bytes_to_base64url(options.challenge)
     
     return json.loads(options_to_json(options))
 
@@ -277,9 +278,9 @@ async def complete_authentication(
     
     # Verify authentication
     try:
-        # Decode challenge if it's base64 encoded (handles both base64 and base64url)
+        # Decode challenge from base64url format (WebAuthn standard)
         if isinstance(expected_challenge, str):
-            expected_challenge_bytes = base64.urlsafe_b64decode(expected_challenge)
+            expected_challenge_bytes = base64url_to_bytes(expected_challenge)
         else:
             expected_challenge_bytes = expected_challenge
             
