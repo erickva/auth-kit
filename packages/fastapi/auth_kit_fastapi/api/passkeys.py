@@ -139,8 +139,17 @@ async def complete_registration(
         else:
             expected_challenge_bytes = expected_challenge
             
-        # Convert Pydantic model to dict for webauthn library
-        credential_dict = registration_data.response.dict(by_alias=True)
+        # Convert the entire response (RegistrationCredentialResponse) to dict for webauthn library
+        # This includes id, rawId, type, and the nested response object
+        credential_dict = registration_data.response.model_dump(by_alias=True)
+        
+        # SimpleWebAuthn might send rawId differently - ensure they match
+        # The WebAuthn spec requires id and rawId to be the same value
+        if credential_dict.get('id') and not credential_dict.get('rawId'):
+            credential_dict['rawId'] = credential_dict['id']
+        elif credential_dict.get('rawId') and credential_dict.get('id') != credential_dict.get('rawId'):
+            # If they're different, use id as the canonical value
+            credential_dict['rawId'] = credential_dict['id']
         
         verification = verify_registration_response(
             credential=credential_dict,
@@ -285,7 +294,7 @@ async def complete_authentication(
             expected_challenge_bytes = expected_challenge
             
         # Convert Pydantic model to dict for webauthn library
-        credential_dict = auth_data.response.dict(by_alias=True)
+        credential_dict = auth_data.response.model_dump(by_alias=True)
         
         verification = verify_authentication_response(
             credential=credential_dict,
