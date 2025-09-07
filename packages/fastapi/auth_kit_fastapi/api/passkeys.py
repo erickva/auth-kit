@@ -132,9 +132,9 @@ async def complete_registration(
     
     # Verify registration
     try:
-        # Decode challenge if it's base64 encoded
+        # Decode challenge if it's base64 encoded (handles both base64 and base64url)
         if isinstance(expected_challenge, str):
-            expected_challenge_bytes = base64.b64decode(expected_challenge)
+            expected_challenge_bytes = base64.urlsafe_b64decode(expected_challenge)
         else:
             expected_challenge_bytes = expected_challenge
             
@@ -274,9 +274,9 @@ async def complete_authentication(
     
     # Verify authentication
     try:
-        # Decode challenge if it's base64 encoded
+        # Decode challenge if it's base64 encoded (handles both base64 and base64url)
         if isinstance(expected_challenge, str):
-            expected_challenge_bytes = base64.b64decode(expected_challenge)
+            expected_challenge_bytes = base64.urlsafe_b64decode(expected_challenge)
         else:
             expected_challenge_bytes = expected_challenge
             

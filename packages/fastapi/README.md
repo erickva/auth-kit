@@ -168,6 +168,11 @@ async def on_user_logged_in(user):
 
 ## Changelog
 
+### Version 0.3.3 (2025-01-07)
+- **Fixed**: Base64url decoding for passkey challenges
+  - Properly handles base64url encoded challenges (with `-` and `_` characters)
+  - Fixes 400 errors when challenges are sent in base64url format from frontend
+
 ### Version 0.3.2 (2025-01-07)
 - **Fixed**: Passkey challenge handling for proxy/CORS scenarios
   - Challenges can now be provided in the request body as a fallback when session cookies aren't maintained
