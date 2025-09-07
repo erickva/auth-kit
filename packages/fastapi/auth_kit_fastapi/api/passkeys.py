@@ -138,8 +138,11 @@ async def complete_registration(
         else:
             expected_challenge_bytes = expected_challenge
             
+        # Convert Pydantic model to dict for webauthn library
+        credential_dict = registration_data.response.dict(by_alias=True)
+        
         verification = verify_registration_response(
-            credential=registration_data.response,
+            credential=credential_dict,
             expected_challenge=expected_challenge_bytes,
             expected_origin=config.passkey_origin,
             expected_rp_id=config.passkey_rp_id
@@ -280,8 +283,11 @@ async def complete_authentication(
         else:
             expected_challenge_bytes = expected_challenge
             
+        # Convert Pydantic model to dict for webauthn library
+        credential_dict = auth_data.response.dict(by_alias=True)
+        
         verification = verify_authentication_response(
-            credential=auth_data.response,
+            credential=credential_dict,
             expected_challenge=expected_challenge_bytes,
             expected_origin=config.passkey_origin,
             expected_rp_id=config.passkey_rp_id,

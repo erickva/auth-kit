@@ -83,12 +83,19 @@ class RegistrationOptionsResponse(BaseModel):
     attestation: Optional[str] = "none"
 
 
+class RegistrationResponseData(BaseModel):
+    """Registration response data from authenticator"""
+    attestationObject: str
+    clientDataJSON: str
+    transports: Optional[List[str]] = None
+
+
 class RegistrationCredentialResponse(BaseModel):
     """Registration credential from client"""
     id: str
     rawId: str
     type: str = "public-key"
-    response: Dict[str, Any]
+    response: RegistrationResponseData
     clientExtensionResults: Optional[Dict[str, Any]] = None
     authenticatorAttachment: Optional[str] = None
 
@@ -109,12 +116,20 @@ class AuthenticationOptionsResponse(BaseModel):
     userVerification: Optional[str] = "preferred"
 
 
+class AuthenticationResponseData(BaseModel):
+    """Authentication response data from authenticator"""
+    authenticatorData: str
+    clientDataJSON: str
+    signature: str
+    userHandle: Optional[str] = None
+
+
 class AuthenticationCredentialResponse(BaseModel):
     """Authentication credential from client"""
     id: str
     rawId: str
     type: str = "public-key"
-    response: Dict[str, Any]
+    response: AuthenticationResponseData
     clientExtensionResults: Optional[Dict[str, Any]] = None
 
 
