@@ -116,19 +116,31 @@ async def complete_registration(
     config = Depends(get_config)
 ):
     """Complete passkey registration"""
-    # Get challenge from session
-    expected_challenge = request.session.get("passkey_challenge")
+    # Try to get challenge from request body first (for proxy/CORS scenarios)
+    # Fall back to session if not provided
+    expected_challenge = registration_data.challenge if hasattr(registration_data, 'challenge') and registration_data.challenge else None
+    
+    if not expected_challenge:
+        # Fall back to session
+        expected_challenge = request.session.get("passkey_challenge")
+    
     if not expected_challenge:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Registration session expired"
+            detail="Registration session expired or challenge not provided"
         )
     
     # Verify registration
     try:
+        # Decode challenge if it's base64 encoded
+        if isinstance(expected_challenge, str):
+            expected_challenge_bytes = base64.b64decode(expected_challenge)
+        else:
+            expected_challenge_bytes = expected_challenge
+            
         verification = verify_registration_response(
             credential=registration_data.response,
-            expected_challenge=base64.b64decode(expected_challenge),
+            expected_challenge=expected_challenge_bytes,
             expected_origin=config.passkey_origin,
             expected_rp_id=config.passkey_rp_id
         )
@@ -222,12 +234,18 @@ async def complete_authentication(
     config = Depends(get_config)
 ):
     """Complete passkey authentication"""
-    # Get challenge
-    expected_challenge = request.session.get("auth_challenge")
+    # Try to get challenge from request body first (for proxy/CORS scenarios)
+    # Fall back to session if not provided
+    expected_challenge = auth_data.challenge if hasattr(auth_data, 'challenge') and auth_data.challenge else None
+    
+    if not expected_challenge:
+        # Fall back to session
+        expected_challenge = request.session.get("auth_challenge")
+    
     if not expected_challenge:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Authentication session expired"
+            detail="Authentication session expired or challenge not provided"
         )
     
     # Find credential
@@ -256,9 +274,15 @@ async def complete_authentication(
     
     # Verify authentication
     try:
+        # Decode challenge if it's base64 encoded
+        if isinstance(expected_challenge, str):
+            expected_challenge_bytes = base64.b64decode(expected_challenge)
+        else:
+            expected_challenge_bytes = expected_challenge
+            
         verification = verify_authentication_response(
             credential=auth_data.response,
-            expected_challenge=base64.b64decode(expected_challenge),
+            expected_challenge=expected_challenge_bytes,
             expected_origin=config.passkey_origin,
             expected_rp_id=config.passkey_rp_id,
             credential_public_key=base64.b64decode(credential.public_key),
