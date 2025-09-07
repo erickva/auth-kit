@@ -166,6 +166,17 @@ async def on_user_logged_in(user):
     print(f"User logged in: {user.email}")
 ```
 
+## Changelog
+
+### Version 0.3.2 (2025-01-07)
+- **Fixed**: Passkey challenge handling for proxy/CORS scenarios
+  - Challenges can now be provided in the request body as a fallback when session cookies aren't maintained
+  - Fixes "Registration session expired" errors in environments with proxy setups (e.g., Next.js, Vercel)
+  - Maintains backward compatibility with session-based challenge storage
+
+### Version 0.3.1
+- Initial public release with full authentication features
+
 ## License
 
 MIT License
