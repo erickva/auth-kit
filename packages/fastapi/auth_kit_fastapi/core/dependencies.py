@@ -17,12 +17,13 @@ from ..schemas.auth import ErrorResponse
 
 
 # OAuth2 scheme for token authentication
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+# Use relative URL for sub-app compatibility
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
 
 
 async def get_current_user(
     request: Request,
-    token: Annotated[str, Depends(oauth2_scheme)],
+    token: Annotated[Optional[str], Depends(oauth2_scheme)],
     db: Session = Depends(get_db)
 ) -> BaseUser:
     """
@@ -44,6 +45,14 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    # If OAuth2 scheme didn't get the token, try to get it from header directly
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]  # Remove "Bearer " prefix
+        else:
+            raise credentials_exception
     
     try:
         # Get JWT config from app state
