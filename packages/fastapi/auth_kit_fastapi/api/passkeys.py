@@ -151,6 +151,12 @@ async def complete_registration(
             # If they're different, use id as the canonical value
             credential_dict['rawId'] = credential_dict['id']
         
+        # Log for debugging (can be removed in production)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Credential structure being verified: {list(credential_dict.keys())}")
+        logger.debug(f"Response structure: {list(credential_dict['response'].keys())}")
+        
         verification = verify_registration_response(
             credential=credential_dict,
             expected_challenge=expected_challenge_bytes,
@@ -162,9 +168,20 @@ async def complete_registration(
             raise ValueError("Verification failed")
             
     except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Registration verification error: {str(e)}", exc_info=True)
+        
+        # Provide more specific error messages
+        error_msg = str(e)
+        if "utf-8" in error_msg.lower() or "decode" in error_msg.lower():
+            error_msg = "Invalid credential encoding. Please ensure your browser supports WebAuthn."
+        elif "id and raw_id" in error_msg.lower():
+            error_msg = "Credential ID mismatch. This is a known issue being addressed."
+        
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Registration verification failed: {str(e)}"
+            detail=f"Registration verification failed: {error_msg}"
         )
     
     # Save credential
@@ -293,7 +310,7 @@ async def complete_authentication(
         else:
             expected_challenge_bytes = expected_challenge
             
-        # Convert Pydantic model to dict for webauthn library
+        # Convert the entire response to dict for webauthn library
         credential_dict = auth_data.response.model_dump(by_alias=True)
         
         verification = verify_authentication_response(
