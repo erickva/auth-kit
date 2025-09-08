@@ -164,8 +164,8 @@ async def complete_registration(
             expected_rp_id=config.passkey_rp_id
         )
         
-        if not verification.verified:
-            raise ValueError("Verification failed")
+        # If verify_registration_response returns without exception, verification succeeded
+        # The VerifiedRegistration object contains credential data, not a 'verified' flag
             
     except Exception as e:
         import logging
@@ -322,8 +322,8 @@ async def complete_authentication(
             credential_current_sign_count=credential.sign_count
         )
         
-        if not verification.verified:
-            raise ValueError("Verification failed")
+        # If verify_authentication_response returns without exception, verification succeeded
+        # The VerifiedAuthentication object contains credential data, not a 'verified' flag
             
     except Exception as e:
         raise HTTPException(
