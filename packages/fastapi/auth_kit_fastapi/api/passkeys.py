@@ -184,10 +184,10 @@ async def complete_registration(
             detail=f"Registration verification failed: {error_msg}"
         )
     
-    # Save credential
+    # Save credential - store credential ID without padding for consistency
     credential = UserCredential(
         user_id=current_user.id,
-        credential_id=base64.b64encode(verification.credential_id).decode(),
+        credential_id=base64.b64encode(verification.credential_id).decode().rstrip('='),
         public_key=base64.b64encode(verification.credential_public_key).decode(),
         sign_count=verification.sign_count,
         name=registration_data.name,
@@ -278,10 +278,19 @@ async def complete_authentication(
             detail="Authentication session expired or challenge not provided"
         )
     
-    # Find credential
+    # Find credential - handle base64 padding variations
     credential_id = auth_data.response.id
+    
+    # Try different padding variations since browsers may send IDs without padding
+    possible_ids = [
+        credential_id,
+        credential_id + '=',
+        credential_id + '==',
+        credential_id.rstrip('=')  # Also try without any padding
+    ]
+    
     credential = db.query(UserCredential).filter(
-        UserCredential.credential_id == credential_id
+        UserCredential.credential_id.in_(possible_ids)
     ).first()
     
     if not credential:
