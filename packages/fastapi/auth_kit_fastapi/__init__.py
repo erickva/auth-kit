@@ -13,7 +13,7 @@ from .core.dependencies import (
 from .models.user import BaseUser
 from .core.events import auth_events
 
-__version__ = "0.3.16"
+__version__ = "0.3.17"
 
 __all__ = [
     "AuthConfig",
