@@ -6,7 +6,7 @@ from typing import Optional, Annotated
 from datetime import datetime, timezone
 from uuid import UUID
 from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError
 
@@ -16,9 +16,20 @@ from ..models.user import BaseUser
 from ..schemas.auth import ErrorResponse
 
 
+# Custom bearer scheme that works better in sub-app contexts
+# HTTPBearer extracts the bearer token without needing a tokenUrl
+class BearerAuth(HTTPBearer):
+    def __init__(self, auto_error: bool = False):
+        super().__init__(auto_error=auto_error)
+    
+    async def __call__(self, request: Request) -> Optional[str]:
+        credentials: HTTPAuthorizationCredentials = await super().__call__(request)
+        if credentials:
+            return credentials.credentials
+        return None
+
 # OAuth2 scheme for token authentication
-# Use relative URL for sub-app compatibility
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
+oauth2_scheme = BearerAuth(auto_error=False)
 
 
 async def get_current_user(
@@ -46,13 +57,9 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    # If OAuth2 scheme didn't get the token, try to get it from header directly
+    # HTTPBearer handles token extraction, so if we don't have a token, fail
     if not token:
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header[7:]  # Remove "Bearer " prefix
-        else:
-            raise credentials_exception
+        raise credentials_exception
     
     try:
         # Get JWT config from app state
@@ -93,12 +100,14 @@ async def get_current_user(
 
 
 async def get_current_active_user(
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_user)]
 ) -> BaseUser:
     """
     Get current active user
     
     Args:
+        request: FastAPI request object
         current_user: Current authenticated user
         
     Returns:
@@ -116,12 +125,14 @@ async def get_current_active_user(
 
 
 async def require_verified_user(
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)]
 ) -> BaseUser:
     """
     Require email-verified user
     
     Args:
+        request: FastAPI request object
         current_user: Current active user
         
     Returns:
@@ -139,12 +150,14 @@ async def require_verified_user(
 
 
 async def require_superuser(
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)]
 ) -> BaseUser:
     """
     Require superuser privileges
     
     Args:
+        request: FastAPI request object
         current_user: Current active user
         
     Returns:
@@ -196,4 +209,24 @@ def get_config(request: Request):
     Returns:
         AuthConfig object
     """
-    return request.app.state.config
+    # Try to get config from current app state
+    if hasattr(request.app.state, 'config'):
+        return request.app.state.config
+    
+    # In sub-app context, check parent app (if mounted)
+    # When mounted as sub-app, the request.scope might have the root path
+    if hasattr(request, 'scope') and 'app' in request.scope:
+        app = request.scope['app']
+        if hasattr(app, 'state') and hasattr(app.state, 'config'):
+            return app.state.config
+    
+    # Try to find config in parent app through mounting
+    # This handles cases where the auth app is mounted on a main app
+    if hasattr(request.app, 'routes'):
+        for route in request.app.routes:
+            if hasattr(route, 'app') and hasattr(route.app, 'state'):
+                if hasattr(route.app.state, 'config'):
+                    return route.app.state.config
+    
+    # If we still can't find config, raise an error
+    raise RuntimeError("Auth configuration not found in app state")

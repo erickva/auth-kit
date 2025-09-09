@@ -302,6 +302,7 @@ async def logout(
 
 @router.get("/me", response_model=UserResponse)
 async def get_profile(
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)]
 ):
     """Get current user profile"""
@@ -311,6 +312,7 @@ async def get_profile(
 @router.put("/me", response_model=UserResponse)
 async def update_profile(
     user_update: UserUpdate,
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
@@ -332,6 +334,7 @@ async def update_profile(
 @router.post("/password/change", response_model=MessageResponse)
 async def change_password(
     password_data: PasswordChangeRequest,
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
@@ -487,6 +490,7 @@ async def verify_email(
 
 @router.post("/resend-verification", response_model=MessageResponse)
 async def resend_verification(
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     config = Depends(get_config)
 ):

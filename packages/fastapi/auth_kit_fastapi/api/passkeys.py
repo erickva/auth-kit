@@ -48,6 +48,7 @@ router = APIRouter()
 
 @router.get("/", response_model=PasskeyListResponse)
 async def list_passkeys(
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
@@ -401,6 +402,7 @@ async def complete_authentication(
 @router.delete("/{passkey_id}", response_model=MessageResponse)
 async def delete_passkey(
     passkey_id: UUID,
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):

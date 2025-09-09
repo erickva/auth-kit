@@ -168,6 +168,14 @@ async def on_user_logged_in(user):
 
 ## Changelog
 
+### Version 0.3.16 (2025-01-09)
+- **Fixed**: Complete passkey authentication flow with proxy/API gateway setups
+  - Resolved FastAPI `redirect_slashes` conflicts causing redirect loops in proxy environments
+  - Added duplicate routes without trailing slashes for passkey endpoints
+  - Fixed authentication flow to properly handle passkey login without password fallback
+  - Improved frontend integration with proper Content-Type handling for form-encoded data
+  - Enhanced debug logging for troubleshooting authentication issues
+
 ### Version 0.3.3 (2025-01-07)
 - **Fixed**: Base64url decoding for passkey challenges
   - Properly handles base64url encoded challenges (with `-` and `_` characters)
@@ -181,6 +189,50 @@ async def on_user_logged_in(user):
 
 ### Version 0.3.1
 - Initial public release with full authentication features
+
+## Troubleshooting
+
+### Passkey Authentication Issues
+
+#### Redirect Loops with Proxy/API Gateway
+If you're experiencing redirect loops (ERR_TOO_MANY_REDIRECTS) when using passkeys through a proxy:
+
+**Problem**: FastAPI's `redirect_slashes=True` (default) conflicts with proxy setups, causing infinite redirects.
+
+**Solution**: 
+```python
+app = FastAPI(redirect_slashes=False)
+```
+
+#### Frontend Integration with Next.js/Vercel
+When using with Next.js or similar frameworks that proxy API requests:
+
+1. **Preserve trailing slashes in proxy config**:
+```javascript
+// next.config.js
+rewrites: async () => [
+  {
+    source: '/api/:path*/',
+    destination: 'http://backend:8000/api/:path*/'
+  },
+  {
+    source: '/api/:path*',
+    destination: 'http://backend:8000/api/:path*'
+  }
+]
+```
+
+2. **Handle form-encoded data properly in axios**:
+```javascript
+// Don't override Content-Type for URLSearchParams
+if (!(config.data instanceof FormData) && 
+    !(config.data instanceof URLSearchParams)) {
+  config.headers['Content-Type'] = 'application/json';
+}
+```
+
+#### "Credential not found" Errors
+This usually means the passkey authentication succeeded but the frontend is incorrectly trying to perform a regular login afterwards. Ensure your frontend directly fetches user data after successful passkey verification instead of calling the login endpoint.
 
 ## License
 

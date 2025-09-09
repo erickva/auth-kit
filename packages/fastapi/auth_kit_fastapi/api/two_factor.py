@@ -42,6 +42,7 @@ router = APIRouter()
 
 @router.get("/status", response_model=TwoFactorStatusResponse)
 async def get_2fa_status(
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)]
 ):
     """Get 2FA status for current user"""
@@ -159,6 +160,7 @@ async def verify_2fa_setup(
 @router.post("/disable", response_model=MessageResponse)
 async def disable_2fa(
     disable_data: TwoFactorDisableRequest,
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
@@ -193,6 +195,7 @@ async def disable_2fa(
 @router.post("/recovery-codes", response_model=RecoveryCodesResponse)
 async def regenerate_recovery_codes(
     regenerate_data: RecoveryCodesRegenerateRequest,
+    request: Request,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     db: Session = Depends(get_db),
     config = Depends(get_config)
