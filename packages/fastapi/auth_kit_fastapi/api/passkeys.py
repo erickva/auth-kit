@@ -81,7 +81,7 @@ async def begin_registration(
     for cred in existing_credentials:
         exclude_credentials.append(
             PublicKeyCredentialDescriptor(
-                id=base64.urlsafe_b64decode(cred.credential_id + "=="),
+                id=base64url_to_bytes(cred.credential_id),  # credential_id is stored as base64url
                 transports=[AuthenticatorTransport.INTERNAL, AuthenticatorTransport.USB]
             )
         )
@@ -185,10 +185,11 @@ async def complete_registration(
             detail=f"Registration verification failed: {error_msg}"
         )
     
-    # Save credential - store credential ID without padding for consistency
+    # Save credential - store credential ID in base64url format (WebAuthn standard)
+    # This ensures consistency with how browsers send credential IDs
     credential = UserCredential(
         user_id=current_user.id,
-        credential_id=base64.b64encode(verification.credential_id).decode().rstrip('='),
+        credential_id=bytes_to_base64url(verification.credential_id),  # Use base64url format
         public_key=base64.b64encode(verification.credential_public_key).decode(),
         sign_count=verification.sign_count,
         name=registration_data.name,
@@ -238,7 +239,7 @@ async def begin_authentication(
             for cred in credentials:
                 allow_credentials.append(
                     PublicKeyCredentialDescriptor(
-                        id=base64.urlsafe_b64decode(cred.credential_id + "=="),
+                        id=base64url_to_bytes(cred.credential_id),  # credential_id is stored as base64url
                         transports=[AuthenticatorTransport.INTERNAL, AuthenticatorTransport.USB]
                     )
                 )
@@ -279,19 +280,13 @@ async def complete_authentication(
             detail="Authentication session expired or challenge not provided"
         )
     
-    # Find credential - handle base64 padding variations
+    # Find credential - browsers send base64url format, which is what we store
     credential_id = auth_data.response.id
     
-    # Try different padding variations since browsers may send IDs without padding
-    possible_ids = [
-        credential_id,
-        credential_id + '=',
-        credential_id + '==',
-        credential_id.rstrip('=')  # Also try without any padding
-    ]
-    
+    # The credential_id from browser is already in base64url format
+    # which matches what we stored during registration
     credential = db.query(UserCredential).filter(
-        UserCredential.credential_id.in_(possible_ids)
+        UserCredential.credential_id == credential_id
     ).first()
     
     if not credential:
