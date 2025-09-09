@@ -29,7 +29,7 @@ def create_access_token(
     to_encode.update({
         "exp": expire,
         "iat": datetime.now(timezone.utc),
-        "type": "access"
+        "type": data.get("type", "access")  # Preserve existing type or default to "access"
     })
     
     return jwt.encode(to_encode, secret_key, algorithm=algorithm)

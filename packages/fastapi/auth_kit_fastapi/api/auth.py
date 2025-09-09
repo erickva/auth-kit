@@ -122,9 +122,8 @@ async def login(
     # Check if 2FA is enabled
     if user.two_factor_enabled:
         # Create temporary token for 2FA verification
-        temp_token_data = {"sub": str(user.id), "type": "2fa_temp"}
         temp_token = create_access_token(
-            temp_token_data,
+            {"sub": str(user.id), "type": "2fa_temp"},
             config.jwt_secret,
             config.jwt_algorithm,
             expires_delta=timedelta(minutes=5)
