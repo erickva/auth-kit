@@ -49,17 +49,24 @@ class RecoveryCodesResponse(BaseModel):
 
 class TwoFactorLoginVerifyRequest(BaseModel):
     """Verify 2FA during login"""
-    code: str
+    # Define is_recovery_code before code so validator has access to it
     is_recovery_code: bool = False
-    
+    code: str
+
     @validator('code')
     def validate_code(cls, v, values):
+        """Validate 2FA code depending on the flag.
+
+        When using recovery codes, allow pattern XXXX-XXXX-XXXX-XXXX (alphanumeric)
+        and skip the 6-digit check.
+        """
         if values.get('is_recovery_code'):
-            # Recovery code format: XXXX-XXXX-XXXX-XXXX
-            if not v.replace('-', '').isalnum():
+            # Recovery code format: XXXX-XXXX-XXXX-XXXX (letters/digits)
+            compact = v.replace('-', '')
+            if not compact.isalnum() or len(compact) != 16:
                 raise ValueError('Invalid recovery code format')
         else:
-            # TOTP code: 6 digits
+            # TOTP code: strictly 6 digits
             if not v.isdigit() or len(v) != 6:
                 raise ValueError('Code must be 6 digits')
         return v
