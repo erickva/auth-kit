@@ -30,7 +30,7 @@ from webauthn.helpers.structs import (
 
 from ..models.user import BaseUser, UserCredential
 from ..core.events import auth_events
-from ..config import AuthConfig
+from ..core.config import AuthConfig
 
 logger = logging.getLogger(__name__)
 

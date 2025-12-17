@@ -22,7 +22,7 @@ from ..core.security import (
     verify_recovery_code
 )
 from ..core.events import auth_events
-from ..config import AuthConfig
+from ..core.config import AuthConfig
 
 logger = logging.getLogger(__name__)
 
