@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi.testclient import TestClient
 
-from auth_kit_fastapi import AuthConfig, init_auth
+from auth_kit_fastapi import AuthConfig
 from auth_kit_fastapi.models import Base, BaseUser
 from auth_kit_fastapi.core.database import get_db
 
@@ -65,23 +65,28 @@ def db() -> Generator[Session, None, None]:
 def app(auth_config, db):
     """Test FastAPI application"""
     from fastapi import FastAPI
-    from auth_kit_fastapi import auth_router
-    
+    from auth_kit_fastapi.api import auth_router, passkeys_router, two_factor_router
+
     app = FastAPI()
-    
+
+    # Store config and session in app state
+    app.state.config = auth_config
+    app.state.db_session = TestingSessionLocal
+
     # Override database dependency
     def override_get_db():
         try:
             yield db
         finally:
             pass
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
-    # Initialize auth
-    init_auth(app, auth_config, TestingSessionLocal)
-    app.include_router(auth_router, prefix="/api")
-    
+
+    # Include routers
+    app.include_router(auth_router, prefix="/api/auth")
+    app.include_router(passkeys_router, prefix="/api/passkeys")
+    app.include_router(two_factor_router, prefix="/api/2fa")
+
     return app
 
 
