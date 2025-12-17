@@ -86,6 +86,16 @@ class AuthConfig(BaseSettings):
         description="Base64-encoded 32-byte key for OAuth token encryption (AES-256-GCM)"
     )
 
+    # OAuth State Signing
+    oauth_state_signing_key: Optional[str] = Field(
+        None,
+        description="Key for signing OAuth state JWTs. Falls back to jwt_secret if not set."
+    )
+    oauth_state_expiry_seconds: int = Field(
+        600,
+        description="OAuth state JWT expiration in seconds (default: 10 minutes)"
+    )
+
     # Google OAuth
     oauth_google_client_id: Optional[str] = Field(None, description="Google OAuth Client ID")
     oauth_google_client_secret: Optional[str] = Field(None, description="Google OAuth Client Secret")
@@ -200,6 +210,10 @@ class AuthConfig(BaseSettings):
                     missing.append("OAUTH_APPLE_PRIVATE_KEY")
                 if missing:
                     raise ValueError(f"Apple OAuth requires: {', '.join(missing)}")
+
+    def get_oauth_state_signing_key(self) -> str:
+        """Get the signing key for OAuth state JWTs. Falls back to jwt_secret."""
+        return self.oauth_state_signing_key or self.jwt_secret
 
     def get_oauth_provider_credentials(self, provider: str) -> dict:
         """Get credentials for a specific OAuth provider"""
