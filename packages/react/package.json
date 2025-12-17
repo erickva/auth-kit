@@ -1,6 +1,6 @@
 {
   "name": "@erickva/auth-kit-react",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "React components and hooks for Auth Kit",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

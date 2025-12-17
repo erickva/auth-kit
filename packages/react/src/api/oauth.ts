@@ -90,6 +90,7 @@ class OAuthAPI {
     const data = await response.json();
     return {
       providers: data.providers.map((provider: any) => ({
+        id: provider.id,
         name: provider.name,
         displayName: provider.display_name ?? provider.displayName ?? provider.name,
         enabled: provider.enabled
