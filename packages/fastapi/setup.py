@@ -39,6 +39,8 @@ setup(
         "qrcode>=7.4.0",
         "webauthn>=1.9.0",
         "alembic>=1.12.0",
+        "httpx>=0.25.0",
+        "cryptography>=41.0.0",
     ],
     extras_require={
         "dev": [

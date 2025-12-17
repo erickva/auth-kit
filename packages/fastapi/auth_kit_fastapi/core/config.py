@@ -2,6 +2,7 @@
 Configuration for Auth Kit FastAPI
 """
 
+import base64
 from typing import Dict, Any, Optional, List, Type
 from pydantic_settings import BaseSettings
 from pydantic import Field, validator
@@ -9,7 +10,7 @@ from pydantic import Field, validator
 
 class AuthConfig(BaseSettings):
     """Authentication configuration"""
-    
+
     # User Model
     user_model: Optional[Type[Any]] = Field(None, description="Concrete User model class")
     
@@ -78,7 +79,30 @@ class AuthConfig(BaseSettings):
     
     # Session Settings
     session_lifetime_seconds: int = Field(86400, description="Session lifetime in seconds")
-    
+
+    # OAuth Token Encryption
+    oauth_token_encryption_key: Optional[str] = Field(
+        None,
+        description="Base64-encoded 32-byte key for OAuth token encryption (AES-256-GCM)"
+    )
+
+    # Google OAuth
+    oauth_google_client_id: Optional[str] = Field(None, description="Google OAuth Client ID")
+    oauth_google_client_secret: Optional[str] = Field(None, description="Google OAuth Client Secret")
+
+    # GitHub OAuth
+    oauth_github_client_id: Optional[str] = Field(None, description="GitHub OAuth Client ID")
+    oauth_github_client_secret: Optional[str] = Field(None, description="GitHub OAuth Client Secret")
+
+    # Apple OAuth
+    oauth_apple_client_id: Optional[str] = Field(None, description="Apple OAuth Client ID (Service ID)")
+    oauth_apple_team_id: Optional[str] = Field(None, description="Apple Team ID")
+    oauth_apple_key_id: Optional[str] = Field(None, description="Apple Key ID")
+    oauth_apple_private_key: Optional[str] = Field(
+        None,
+        description="Apple Private Key (PEM format, newlines as \\n)"
+    )
+
     @validator("user_model")
     def validate_user_model(cls, v):
         """Validate that user_model is provided and is a proper class"""
@@ -90,21 +114,38 @@ class AuthConfig(BaseSettings):
     def validate_features(cls, v):
         """Validate feature configuration"""
         valid_features = {
-            "passkeys", "two_factor", "email_verification", 
+            "passkeys", "two_factor", "email_verification",
             "social_login", "rate_limiting", "audit_logs"
         }
-        
+
         for key in v:
-            if key not in valid_features and key != "social_login":
+            if key not in valid_features:
                 raise ValueError(f"Invalid feature: {key}")
-        
+
         # Validate social login providers
         if "social_login" in v and isinstance(v["social_login"], list):
-            valid_providers = {"google", "github", "facebook", "twitter", "microsoft"}
+            valid_providers = {"google", "github", "apple"}
             for provider in v["social_login"]:
                 if provider not in valid_providers:
-                    raise ValueError(f"Invalid social login provider: {provider}")
-        
+                    raise ValueError(f"Invalid social login provider: {provider}. Valid: {valid_providers}")
+
+        return v
+
+    @validator("oauth_token_encryption_key")
+    def validate_oauth_encryption_key(cls, v):
+        """Validate OAuth token encryption key format (must be 32 bytes when base64 decoded)"""
+        if v is None:
+            return v
+        try:
+            key_bytes = base64.b64decode(v)
+            if len(key_bytes) != 32:
+                raise ValueError(
+                    f"OAUTH_TOKEN_ENCRYPTION_KEY must decode to 32 bytes for AES-256-GCM, got {len(key_bytes)}"
+                )
+        except Exception as e:
+            if "must decode to 32 bytes" in str(e):
+                raise
+            raise ValueError(f"OAUTH_TOKEN_ENCRYPTION_KEY must be valid base64: {e}")
         return v
     
     class Config:
@@ -119,3 +160,64 @@ class AuthConfig(BaseSettings):
         """Get enabled social login providers"""
         social = self.features.get("social_login", [])
         return social if isinstance(social, list) else []
+
+    def validate_oauth_config(self) -> None:
+        """
+        Validate OAuth configuration at startup.
+        Raises ValueError if social_login is enabled but required config is missing.
+        """
+        providers = self.get_social_providers()
+        if not providers:
+            return
+
+        # Require encryption key when any provider is enabled
+        if not self.oauth_token_encryption_key:
+            raise ValueError(
+                "OAUTH_TOKEN_ENCRYPTION_KEY is required when social_login providers are enabled"
+            )
+
+        # Validate provider-specific credentials
+        for provider in providers:
+            if provider == "google":
+                if not self.oauth_google_client_id or not self.oauth_google_client_secret:
+                    raise ValueError(
+                        "OAUTH_GOOGLE_CLIENT_ID and OAUTH_GOOGLE_CLIENT_SECRET required for Google OAuth"
+                    )
+            elif provider == "github":
+                if not self.oauth_github_client_id or not self.oauth_github_client_secret:
+                    raise ValueError(
+                        "OAUTH_GITHUB_CLIENT_ID and OAUTH_GITHUB_CLIENT_SECRET required for GitHub OAuth"
+                    )
+            elif provider == "apple":
+                missing = []
+                if not self.oauth_apple_client_id:
+                    missing.append("OAUTH_APPLE_CLIENT_ID")
+                if not self.oauth_apple_team_id:
+                    missing.append("OAUTH_APPLE_TEAM_ID")
+                if not self.oauth_apple_key_id:
+                    missing.append("OAUTH_APPLE_KEY_ID")
+                if not self.oauth_apple_private_key:
+                    missing.append("OAUTH_APPLE_PRIVATE_KEY")
+                if missing:
+                    raise ValueError(f"Apple OAuth requires: {', '.join(missing)}")
+
+    def get_oauth_provider_credentials(self, provider: str) -> dict:
+        """Get credentials for a specific OAuth provider"""
+        if provider == "google":
+            return {
+                "client_id": self.oauth_google_client_id,
+                "client_secret": self.oauth_google_client_secret,
+            }
+        elif provider == "github":
+            return {
+                "client_id": self.oauth_github_client_id,
+                "client_secret": self.oauth_github_client_secret,
+            }
+        elif provider == "apple":
+            return {
+                "client_id": self.oauth_apple_client_id,
+                "team_id": self.oauth_apple_team_id,
+                "key_id": self.oauth_apple_key_id,
+                "private_key": self.oauth_apple_private_key,
+            }
+        return {}
