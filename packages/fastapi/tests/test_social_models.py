@@ -7,15 +7,17 @@ from datetime import datetime
 from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
 
-from auth_kit_fastapi.models import BaseUser, SocialAccount
+from auth_kit_fastapi.models import SocialAccount
+# Import User from conftest (concrete implementation of BaseUser)
+from tests.conftest import User
 
 
 class TestHasUsablePassword:
-    """Tests for has_usable_password field on BaseUser"""
+    """Tests for has_usable_password field on User"""
 
     def test_default_has_usable_password_true(self, db):
         """Test that has_usable_password defaults to True for normal users"""
-        user = BaseUser(
+        user = User(
             email="normal@example.com",
             first_name="Normal",
             last_name="User",
@@ -32,7 +34,7 @@ class TestHasUsablePassword:
 
     def test_social_user_has_usable_password_false(self, db):
         """Test that social-only users can have has_usable_password=False"""
-        user = BaseUser(
+        user = User(
             email="social@example.com",
             first_name="Social",
             last_name="User",
@@ -50,7 +52,7 @@ class TestHasUsablePassword:
 
     def test_has_usable_password_in_to_dict(self, db):
         """Test that has_usable_password is included in to_dict()"""
-        user = BaseUser(
+        user = User(
             email="dict@example.com",
             is_active=True,
             has_usable_password=False,
@@ -68,7 +70,7 @@ class TestHasUsablePassword:
     def test_query_by_has_usable_password(self, db):
         """Test querying users by has_usable_password"""
         # Create users with password
-        user_with_password = BaseUser(
+        user_with_password = User(
             email="with_password@example.com",
             is_active=True,
             has_usable_password=True,
@@ -76,7 +78,7 @@ class TestHasUsablePassword:
         )
 
         # Create social-only user
-        user_social_only = BaseUser(
+        user_social_only = User(
             email="social_only@example.com",
             is_active=True,
             has_usable_password=False,
@@ -87,14 +89,14 @@ class TestHasUsablePassword:
         db.commit()
 
         # Query users with password
-        users_with_password = db.query(BaseUser).filter(
-            BaseUser.has_usable_password == True
+        users_with_password = db.query(User).filter(
+            User.has_usable_password == True
         ).all()
         assert any(u.email == "with_password@example.com" for u in users_with_password)
 
         # Query social-only users
-        social_users = db.query(BaseUser).filter(
-            BaseUser.has_usable_password == False
+        social_users = db.query(User).filter(
+            User.has_usable_password == False
         ).all()
         assert any(u.email == "social_only@example.com" for u in social_users)
 
@@ -159,7 +161,7 @@ class TestSocialAccount:
         db.commit()
 
         # Create another user
-        user2 = BaseUser(
+        user2 = User(
             email="user2@example.com",
             is_active=True,
             hashed_password="hash"
@@ -293,7 +295,7 @@ class TestSocialAccount:
     def test_cascade_delete_with_user(self, db):
         """Test that social accounts are deleted when user is deleted"""
         # Create user with social account
-        user = BaseUser(
+        user = User(
             email="cascade@example.com",
             is_active=True,
             hashed_password="hash"

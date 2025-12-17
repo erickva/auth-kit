@@ -18,6 +18,7 @@ export * from './components';
 export { authAPI } from './api/auth';
 export { passkeyAPI } from './api/passkey';
 export { twoFactorAPI } from './api/twoFactor';
+export { oauthAPI } from './api/oauth';
 
 // Re-export useful types from core
 export type {
@@ -30,7 +31,15 @@ export type {
   LoginResponse,
   AuthTokens,
   AuthEventType,
-  AuthEvent
+  AuthEvent,
+  // OAuth types
+  OAuthProvider,
+  OAuthProviderInfo,
+  OAuthAuthorizeResponse,
+  OAuthCallbackRequest,
+  LinkedAccount,
+  PKCEData,
+  OAuthStateData
 } from '@erickva/auth-kit-core';
 
 // Package version

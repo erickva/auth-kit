@@ -9,17 +9,23 @@ from sqlalchemy.orm import sessionmaker, Session
 from fastapi.testclient import TestClient
 
 from auth_kit_fastapi import AuthConfig
-from auth_kit_fastapi.models import Base, BaseUser
+from auth_kit_fastapi.models import Base, BaseUser, SocialAccount
 from auth_kit_fastapi.core.database import get_db
 
 
 # Test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
+    SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False}
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+# Create a concrete User model for tests
+class User(BaseUser):
+    """Concrete user model for tests"""
+    __tablename__ = "users"
 
 
 # Auth configuration for tests
@@ -27,6 +33,8 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 def auth_config():
     """Test auth configuration"""
     return AuthConfig(
+        database_url=SQLALCHEMY_DATABASE_URL,
+        user_model=User,
         jwt_secret="test-secret-key",
         jwt_algorithm="HS256",
         access_token_expire_minutes=30,
@@ -38,13 +46,11 @@ def auth_config():
         totp_issuer="Test App",
         totp_window=1,
         recovery_codes_count=8,
-        app_name="Test App",
-        app_url="http://localhost",
         features={
             "email_verification": True,
-            "password_reset": True,
             "two_factor": True,
-            "passkeys": True
+            "passkeys": True,
+            "social_login": []
         }
     )
 
@@ -98,9 +104,9 @@ def client(app):
 
 
 @pytest.fixture
-def test_user(db) -> BaseUser:
+def test_user(db) -> User:
     """Create a test user"""
-    user = BaseUser(
+    user = User(
         email="test@example.com",
         first_name="Test",
         last_name="User",
@@ -108,18 +114,18 @@ def test_user(db) -> BaseUser:
         is_verified=True
     )
     user.set_password("password123")
-    
+
     db.add(user)
     db.commit()
     db.refresh(user)
-    
+
     return user
 
 
 @pytest.fixture
-def test_user_unverified(db) -> BaseUser:
+def test_user_unverified(db) -> User:
     """Create an unverified test user"""
-    user = BaseUser(
+    user = User(
         email="unverified@example.com",
         first_name="Unverified",
         last_name="User",
@@ -127,18 +133,21 @@ def test_user_unverified(db) -> BaseUser:
         is_verified=False
     )
     user.set_password("password123")
-    
+
     db.add(user)
     db.commit()
     db.refresh(user)
-    
+
     return user
 
 
 @pytest.fixture
-def test_user_with_2fa(db) -> BaseUser:
+def test_user_with_2fa(db) -> User:
     """Create a test user with 2FA enabled"""
-    user = BaseUser(
+    import json
+    from auth_kit_fastapi.core.security import hash_recovery_code
+
+    user = User(
         email="2fa@example.com",
         first_name="2FA",
         last_name="User",
@@ -148,22 +157,19 @@ def test_user_with_2fa(db) -> BaseUser:
         two_factor_secret="JBSWY3DPEHPK3PXP"  # Test secret
     )
     user.set_password("password123")
-    
+
     # Add recovery codes
-    import json
-    from auth_kit_fastapi.core.security import hash_recovery_code
-    
     recovery_codes = ["AAAA-BBBB", "CCCC-DDDD", "EEEE-FFFF"]
     hashed_codes = [
         {"code": hash_recovery_code(code), "used": False}
         for code in recovery_codes
     ]
     user.two_factor_recovery_codes = json.dumps(hashed_codes)
-    
+
     db.add(user)
     db.commit()
     db.refresh(user)
-    
+
     return user
 
 
