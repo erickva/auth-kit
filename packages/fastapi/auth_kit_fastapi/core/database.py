@@ -29,12 +29,13 @@ def get_db(request: Request) -> Generator[Session, None, None]:
 def init_db(engine) -> None:
     """
     Initialize database tables
-    
+
     Args:
         engine: SQLAlchemy engine
     """
     # Import all models to ensure they're registered
     from ..models.user import BaseUser, UserCredential, UserSession
-    
+    from ..models.social_account import SocialAccount
+
     # Create all tables
     Base.metadata.create_all(bind=engine)
