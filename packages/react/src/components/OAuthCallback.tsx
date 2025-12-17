@@ -105,8 +105,10 @@ export function OAuthCallback({
         const response = await completeOAuth(provider, code, state);
 
         // Handle success
-        if (response?.user && onSuccess) {
-          onSuccess(response.user);
+        // For login mode: response contains user
+        // For link mode: response is null (account was linked, user already authenticated)
+        if (onSuccess) {
+          onSuccess(response?.user || null);
         } else if (successRedirect) {
           window.location.href = successRedirect;
         }
