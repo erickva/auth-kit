@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from .config import AuthConfig
 from .database import get_db, init_db
-from ..api import auth, passkeys, two_factor
+from ..api import auth, passkeys, two_factor, oauth
 from ..models.user import Base
 
 
@@ -78,7 +78,15 @@ def create_auth_app(config: AuthConfig) -> FastAPI:
             prefix="/2fa",
             tags=["Two-Factor Authentication"]
         )
-    
+
+    # Mount OAuth router if social login is enabled
+    if config.get_social_providers():
+        app.include_router(
+            oauth.router,
+            prefix="/oauth",
+            tags=["OAuth / Social Login"]
+        )
+
     # Health check endpoint
     @app.get("/health", tags=["Health"])
     async def health_check():

@@ -65,7 +65,7 @@ def db() -> Generator[Session, None, None]:
 def app(auth_config, db):
     """Test FastAPI application"""
     from fastapi import FastAPI
-    from auth_kit_fastapi.api import auth_router, passkeys_router, two_factor_router
+    from auth_kit_fastapi.api import auth_router, passkeys_router, two_factor_router, oauth_router
 
     app = FastAPI()
 
@@ -86,6 +86,7 @@ def app(auth_config, db):
     app.include_router(auth_router, prefix="/api/auth")
     app.include_router(passkeys_router, prefix="/api/passkeys")
     app.include_router(two_factor_router, prefix="/api/2fa")
+    app.include_router(oauth_router, prefix="/api/oauth")
 
     return app
 
