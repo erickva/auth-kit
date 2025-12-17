@@ -30,6 +30,9 @@ export async function generateEnvFile(config: ProjectConfig, projectPath: string
     if (config.features.includes('twoFactor')) {
       frontendEnv['NEXT_PUBLIC_ENABLE_2FA'] = 'true'
     }
+    if (config.features.includes('socialLogin')) {
+      frontendEnv['NEXT_PUBLIC_ENABLE_SOCIAL_LOGIN'] = 'true'
+    }
     
     // Write frontend .env.local
     const frontendEnvPath = config.projectType === 'fullstack' 
@@ -81,7 +84,31 @@ export async function generateEnvFile(config: ProjectConfig, projectPath: string
       backendEnv['SMTP_USE_TLS'] = 'true'
       backendEnv['EMAIL_FROM'] = `noreply@${config.projectName}.com`
     }
-    
+
+    // Social login configuration
+    if (config.features.includes('socialLogin')) {
+      // OAuth token encryption key (32 bytes base64)
+      const oauthEncryptionKey = crypto.randomBytes(32).toString('base64')
+      backendEnv['AUTH_KIT_OAUTH_TOKEN_ENCRYPTION_KEY'] = oauthEncryptionKey
+
+      // Google OAuth (placeholders)
+      backendEnv['AUTH_KIT_OAUTH_GOOGLE_CLIENT_ID'] = 'your-google-client-id'
+      backendEnv['AUTH_KIT_OAUTH_GOOGLE_CLIENT_SECRET'] = 'your-google-client-secret'
+
+      // GitHub OAuth (placeholders)
+      backendEnv['AUTH_KIT_OAUTH_GITHUB_CLIENT_ID'] = 'your-github-client-id'
+      backendEnv['AUTH_KIT_OAUTH_GITHUB_CLIENT_SECRET'] = 'your-github-client-secret'
+
+      // Apple OAuth (placeholders)
+      backendEnv['AUTH_KIT_OAUTH_APPLE_CLIENT_ID'] = 'your-apple-service-id'
+      backendEnv['AUTH_KIT_OAUTH_APPLE_TEAM_ID'] = 'your-apple-team-id'
+      backendEnv['AUTH_KIT_OAUTH_APPLE_KEY_ID'] = 'your-apple-key-id'
+      backendEnv['AUTH_KIT_OAUTH_APPLE_PRIVATE_KEY'] = '-----BEGIN PRIVATE KEY-----\\nYour Apple private key here\\n-----END PRIVATE KEY-----'
+
+      // Update features to include social_login with default providers
+      backendEnv['AUTH_KIT_FEATURES'] = '{"passkeys": true, "two_factor": true, "email_verification": true, "social_login": ["google", "github", "apple"]}'
+    }
+
     // Write backend .env
     const backendEnvPath = config.projectType === 'fullstack'
       ? path.join(projectPath, 'backend', '.env')
@@ -120,7 +147,10 @@ async function createEnvExamples(config: ProjectConfig, projectPath: string) {
     if (config.features.includes('twoFactor')) {
       frontendExample['NEXT_PUBLIC_ENABLE_2FA'] = 'true'
     }
-    
+    if (config.features.includes('socialLogin')) {
+      frontendExample['NEXT_PUBLIC_ENABLE_SOCIAL_LOGIN'] = 'true'
+    }
+
     const frontendExamplePath = config.projectType === 'fullstack'
       ? path.join(projectPath, 'frontend', '.env.example')
       : path.join(projectPath, '.env.example')
@@ -158,7 +188,20 @@ async function createEnvExamples(config: ProjectConfig, projectPath: string) {
       backendExample['SMTP_USE_TLS'] = 'true'
       backendExample['EMAIL_FROM'] = 'noreply@yourdomain.com'
     }
-    
+
+    if (config.features.includes('socialLogin')) {
+      backendExample['AUTH_KIT_OAUTH_TOKEN_ENCRYPTION_KEY'] = 'your-32-byte-base64-encryption-key'
+      backendExample['AUTH_KIT_OAUTH_GOOGLE_CLIENT_ID'] = 'your-google-client-id'
+      backendExample['AUTH_KIT_OAUTH_GOOGLE_CLIENT_SECRET'] = 'your-google-client-secret'
+      backendExample['AUTH_KIT_OAUTH_GITHUB_CLIENT_ID'] = 'your-github-client-id'
+      backendExample['AUTH_KIT_OAUTH_GITHUB_CLIENT_SECRET'] = 'your-github-client-secret'
+      backendExample['AUTH_KIT_OAUTH_APPLE_CLIENT_ID'] = 'your-apple-service-id'
+      backendExample['AUTH_KIT_OAUTH_APPLE_TEAM_ID'] = 'your-apple-team-id'
+      backendExample['AUTH_KIT_OAUTH_APPLE_KEY_ID'] = 'your-apple-key-id'
+      backendExample['AUTH_KIT_OAUTH_APPLE_PRIVATE_KEY'] = '-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----'
+      backendExample['AUTH_KIT_FEATURES'] = '{"passkeys": true, "two_factor": true, "email_verification": true, "social_login": ["google", "github", "apple"]}'
+    }
+
     const backendExamplePath = config.projectType === 'fullstack'
       ? path.join(projectPath, 'backend', '.env.example')
       : path.join(projectPath, '.env.example')
