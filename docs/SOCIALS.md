@@ -251,6 +251,15 @@ if remaining_auth_methods <= 1:
 - `False` for users created via OAuth-only registration
 - Used to determine if user can authenticate with password
 
+### Email Verification Behavior
+
+When a user is created via OAuth login:
+
+- The `is_verified` field is set based on the OAuth provider's `email_verified` claim
+- Google, GitHub, and Apple all return email verification status
+- If the provider confirms the email is verified, the user is automatically marked as verified
+- This avoids requiring users to verify emails that are already verified by the OAuth provider
+
 ## Token Encryption
 
 OAuth provider tokens (access_token, refresh_token, id_token) are encrypted at rest using AES-256-GCM.
@@ -475,6 +484,10 @@ ALTER TABLE users ADD COLUMN has_usable_password BOOLEAN DEFAULT TRUE;
 
 5. **Lockout Prevention**: Users cannot remove their last authentication method, preventing account lockout.
 
+6. **Server-side PKCE Binding**: The backend verifies that the `code_verifier` in the callback matches the `code_challenge` stored in the signed state JWT, preventing code injection attacks.
+
+7. **Apple ID Token Verification**: Apple id_tokens are cryptographically verified using Apple's JWKS public keys (RS256). Keys are cached for 1 hour for performance.
+
 ## Troubleshooting
 
 ### "Invalid or expired OAuth state"
@@ -499,6 +512,12 @@ ALTER TABLE users ADD COLUMN has_usable_password BOOLEAN DEFAULT TRUE;
 - The code_verifier doesn't match the code_challenge
 - Could be caused by session storage issues
 - Solution: Clear browser storage and try again
+
+### "A different {provider} account is already linked to this user"
+
+- You're trying to link a provider account, but a different account from that provider is already linked
+- Each user can only have one account linked per provider
+- Solution: Unlink the existing account first, then link the new one
 
 ## Migration Guide
 
