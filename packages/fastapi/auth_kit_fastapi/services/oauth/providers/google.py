@@ -186,11 +186,16 @@ class GoogleProvider(OAuthProvider):
                 details=data,
             )
 
+        email_verified = data.get("email_verified")
+        if isinstance(email_verified, str):
+            email_verified = email_verified.lower() == "true"
+
         return OAuthProfile(
             provider=self.provider_name,
             provider_user_id=provider_user_id,
             email=data.get("email"),
             username=data.get("name"),
+            email_verified=email_verified if isinstance(email_verified, bool) else None,
             id_token=tokens.id_token,
         )
 

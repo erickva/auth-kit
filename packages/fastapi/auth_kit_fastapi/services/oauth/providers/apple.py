@@ -47,6 +47,10 @@ class AppleProvider(OAuthProvider):
         "email",
         "name",
     ]
+    jwks_url = "https://appleid.apple.com/auth/keys"
+    jwks_cache_ttl_seconds = 3600
+    _jwks_cache: Optional[Dict[str, Any]] = None
+    _jwks_cached_at: float = 0.0
 
     def __init__(
         self,
@@ -76,7 +80,7 @@ class AppleProvider(OAuthProvider):
     def _get_extra_authorize_params(self) -> Dict[str, str]:
         """Add Apple-specific authorization parameters."""
         return {
-            "response_mode": "form_post",  # Apple returns code via POST
+            "response_mode": "query",
         }
 
     def _generate_client_secret(self) -> str:
@@ -216,16 +220,12 @@ class AppleProvider(OAuthProvider):
             )
 
         try:
-            # Decode without verification for now - the token was just received
-            # from Apple's token endpoint over HTTPS
-            # In production, you might want to verify against Apple's public keys
-            id_token_data = jwt.decode(
-                tokens.id_token,
-                options={"verify_signature": False},
-            )
-        except JWTError as e:
+            id_token_data = await self._verify_id_token(tokens.id_token)
+        except OAuthProfileError:
+            raise
+        except Exception as e:
             raise OAuthProfileError(
-                f"Failed to decode Apple id_token: {str(e)}",
+                f"Failed to verify Apple id_token: {str(e)}",
                 provider=self.provider_name,
             )
 
@@ -240,6 +240,9 @@ class AppleProvider(OAuthProvider):
 
         # Email might be in id_token
         email = id_token_data.get("email")
+        email_verified = id_token_data.get("email_verified")
+        if isinstance(email_verified, str):
+            email_verified = email_verified.lower() == "true"
 
         # Note: Apple only sends name in the first authorization
         # It's included in the 'user' POST parameter, not the id_token
@@ -250,8 +253,83 @@ class AppleProvider(OAuthProvider):
             provider_user_id=provider_user_id,
             email=email,
             username=None,  # Apple doesn't provide username
+            email_verified=email_verified if isinstance(email_verified, bool) else None,
             id_token=tokens.id_token,
         )
+
+    async def _get_apple_jwks(self) -> Dict[str, Any]:
+        """Fetch and cache Apple's JWKS."""
+        now = time.time()
+        if self._jwks_cache and (now - self._jwks_cached_at) < self.jwks_cache_ttl_seconds:
+            return self._jwks_cache
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(self.jwks_url)
+        except httpx.HTTPError as e:
+            raise OAuthProfileError(
+                f"Failed to fetch Apple JWKS: {str(e)}",
+                provider=self.provider_name,
+            )
+
+        if response.status_code != 200:
+            raise OAuthProfileError(
+                f"Apple JWKS fetch failed: {response.text}",
+                provider=self.provider_name,
+            )
+
+        data = response.json()
+        keys = data.get("keys")
+        if not keys:
+            raise OAuthProfileError(
+                "Apple JWKS response missing keys",
+                provider=self.provider_name,
+            )
+
+        self._jwks_cache = {"keys": keys}
+        self._jwks_cached_at = now
+        return self._jwks_cache
+
+    async def _verify_id_token(self, id_token: str) -> Dict[str, Any]:
+        """Verify Apple id_token signature and claims."""
+        try:
+            header = jwt.get_unverified_header(id_token)
+        except JWTError as e:
+            raise OAuthProfileError(
+                f"Invalid Apple id_token header: {str(e)}",
+                provider=self.provider_name,
+            )
+
+        alg = header.get("alg")
+        kid = header.get("kid")
+        if alg != "RS256" or not kid:
+            raise OAuthProfileError(
+                "Apple id_token header missing required 'kid' or unsupported alg",
+                provider=self.provider_name,
+            )
+
+        jwks = await self._get_apple_jwks()
+        keys = jwks.get("keys", [])
+        key = next((k for k in keys if k.get("kid") == kid), None)
+        if not key:
+            raise OAuthProfileError(
+                "Apple JWKS does not contain matching key",
+                provider=self.provider_name,
+            )
+
+        try:
+            return jwt.decode(
+                id_token,
+                key,
+                algorithms=["RS256"],
+                audience=self.client_id,
+                issuer="https://appleid.apple.com",
+            )
+        except JWTError as e:
+            raise OAuthProfileError(
+                f"Apple id_token verification failed: {str(e)}",
+                provider=self.provider_name,
+            )
 
     async def refresh_access_token(self, refresh_token: str) -> OAuthTokens:
         """

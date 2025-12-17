@@ -24,6 +24,7 @@ class OAuthProfile:
     provider_user_id: str
     email: Optional[str]
     username: Optional[str] = None
+    email_verified: Optional[bool] = None
     id_token: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -33,6 +34,7 @@ class OAuthProfile:
             "provider_user_id": self.provider_user_id,
             "email": self.email,
             "username": self.username,
+            "email_verified": self.email_verified,
         }
 
 

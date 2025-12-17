@@ -87,7 +87,14 @@ class OAuthAPI {
     const response = await this.fetchWithAuth(
       `${this.baseUrl}${this.endpoints.OAUTH_PROVIDERS}`
     );
-    return response.json();
+    const data = await response.json();
+    return {
+      providers: data.providers.map((provider: any) => ({
+        name: provider.name,
+        displayName: provider.display_name ?? provider.displayName ?? provider.name,
+        enabled: provider.enabled
+      }))
+    };
   }
 
   /**

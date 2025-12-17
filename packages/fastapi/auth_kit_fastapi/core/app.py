@@ -24,6 +24,9 @@ def create_auth_app(config: AuthConfig) -> FastAPI:
         Configured FastAPI application
     """
     
+    # Validate OAuth configuration early
+    config.validate_oauth_config()
+
     # Create FastAPI app
     app = FastAPI(
         title="Auth Kit API",
@@ -79,8 +82,8 @@ def create_auth_app(config: AuthConfig) -> FastAPI:
             tags=["Two-Factor Authentication"]
         )
 
-    # Mount OAuth router if social login is enabled
-    if config.get_social_providers():
+    # Mount OAuth router (providers will report enabled/disabled)
+    if "social_login" in config.features:
         app.include_router(
             oauth.router,
             prefix="/oauth",

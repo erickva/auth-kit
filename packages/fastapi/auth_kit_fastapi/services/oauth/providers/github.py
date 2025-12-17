@@ -190,12 +190,13 @@ class GitHubProvider(OAuthProvider):
 
                 user_data = response.json()
 
-                # Get email from profile or fetch from emails endpoint
-                email = user_data.get("email")
+                # Fetch primary verified email from /user/emails
+                email, email_verified = await self._fetch_primary_email(client, headers)
 
+                # Fall back to public email if email list is unavailable
                 if not email:
-                    # Email not public, fetch from /user/emails
-                    email = await self._fetch_primary_email(client, headers)
+                    email = user_data.get("email")
+                    email_verified = None
 
         except httpx.HTTPError as e:
             raise OAuthProfileError(
@@ -217,13 +218,14 @@ class GitHubProvider(OAuthProvider):
             provider_user_id=provider_user_id,
             email=email,
             username=user_data.get("login"),
+            email_verified=email_verified,
         )
 
     async def _fetch_primary_email(
         self,
         client: httpx.AsyncClient,
         headers: Dict[str, str]
-    ) -> Optional[str]:
+    ) -> tuple[Optional[str], Optional[bool]]:
         """
         Fetch user's primary email from /user/emails endpoint.
 
@@ -232,28 +234,33 @@ class GitHubProvider(OAuthProvider):
             headers: Authorization headers
 
         Returns:
-            Primary verified email or None if not found
+            Tuple of (email, verified) or (None, None) if not found
         """
         try:
             response = await client.get(self.emails_url, headers=headers)
 
             if response.status_code != 200:
-                return None
+                return None, None
 
             emails: List[Dict] = response.json()
 
             # Find primary verified email
             for email_entry in emails:
                 if email_entry.get("primary") and email_entry.get("verified"):
-                    return email_entry.get("email")
+                    return email_entry.get("email"), True
 
             # Fallback to any verified email
             for email_entry in emails:
                 if email_entry.get("verified"):
-                    return email_entry.get("email")
+                    return email_entry.get("email"), True
 
-            return None
+            # Fallback to primary email even if unverified
+            for email_entry in emails:
+                if email_entry.get("primary"):
+                    return email_entry.get("email"), False
+
+            return None, None
 
         except Exception:
             # Don't fail the whole flow if email fetch fails
-            return None
+            return None, None

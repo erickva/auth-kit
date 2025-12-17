@@ -81,6 +81,8 @@ def get_provider(
     provider_class = PROVIDER_REGISTRY[provider_name]
 
     if provider_name == "apple":
+        if private_key:
+            private_key = private_key.replace("\\n", "\n")
         if not all([team_id, key_id, private_key]):
             raise ValueError(
                 "Apple provider requires team_id, key_id, and private_key"

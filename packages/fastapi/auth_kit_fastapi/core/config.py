@@ -171,6 +171,38 @@ class AuthConfig(BaseSettings):
         social = self.features.get("social_login", [])
         return social if isinstance(social, list) else []
 
+    def _provider_has_credentials(self, provider: str) -> bool:
+        """Check if required credentials are present for a provider."""
+        if provider == "google":
+            return bool(self.oauth_google_client_id and self.oauth_google_client_secret)
+        if provider == "github":
+            return bool(self.oauth_github_client_id and self.oauth_github_client_secret)
+        if provider == "apple":
+            return bool(
+                self.oauth_apple_client_id
+                and self.oauth_apple_team_id
+                and self.oauth_apple_key_id
+                and self.oauth_apple_private_key
+            )
+        return False
+
+    def get_social_provider_info(self) -> List[Dict[str, Any]]:
+        """Get provider info with display names and enabled status."""
+        display_names = {
+            "google": "Google",
+            "github": "GitHub",
+            "apple": "Apple",
+        }
+        enabled_providers = set(self.get_social_providers())
+        providers = []
+        for provider in ["google", "github", "apple"]:
+            providers.append({
+                "name": provider,
+                "display_name": display_names.get(provider, provider.title()),
+                "enabled": provider in enabled_providers and self._provider_has_credentials(provider),
+            })
+        return providers
+
     def validate_oauth_config(self) -> None:
         """
         Validate OAuth configuration at startup.
@@ -189,12 +221,12 @@ class AuthConfig(BaseSettings):
         # Validate provider-specific credentials
         for provider in providers:
             if provider == "google":
-                if not self.oauth_google_client_id or not self.oauth_google_client_secret:
+                if not self._provider_has_credentials("google"):
                     raise ValueError(
                         "OAUTH_GOOGLE_CLIENT_ID and OAUTH_GOOGLE_CLIENT_SECRET required for Google OAuth"
                     )
             elif provider == "github":
-                if not self.oauth_github_client_id or not self.oauth_github_client_secret:
+                if not self._provider_has_credentials("github"):
                     raise ValueError(
                         "OAUTH_GITHUB_CLIENT_ID and OAUTH_GITHUB_CLIENT_SECRET required for GitHub OAuth"
                     )

@@ -24,7 +24,9 @@ class OAuthProviderInfo(BaseModel):
 
 class OAuthProvidersResponse(BaseModel):
     """Response for GET /auth/oauth/providers."""
-    providers: List[str] = Field(..., description="List of enabled provider names")
+    providers: List[OAuthProviderInfo] = Field(
+        ..., description="List of configured OAuth providers"
+    )
 
 
 # Authorization schemas
@@ -59,6 +61,10 @@ class OAuthAuthorizeResponse(BaseModel):
     provider: str = Field(..., description="Provider name")
     authorization_url: str = Field(..., description="URL to redirect user to")
     state: str = Field(..., description="State token for CSRF protection")
+    code_challenge: Optional[str] = Field(
+        None,
+        description="Echoed PKCE code challenge"
+    )
 
 
 # Callback schemas
@@ -97,11 +103,11 @@ class OAuthLinkRequest(BaseModel):
 
 class LinkedAccountInfo(BaseModel):
     """Information about a linked social account."""
-    id: UUID = Field(..., description="Social account ID")
     provider: str = Field(..., description="Provider name")
+    provider_user_id: str = Field(..., description="Provider user ID")
     provider_email: Optional[str] = Field(None, description="Email from provider")
     provider_username: Optional[str] = Field(None, description="Username from provider")
-    created_at: datetime = Field(..., description="When the account was linked")
+    linked_at: datetime = Field(..., description="When the account was linked")
 
     class Config:
         from_attributes = True
@@ -109,9 +115,13 @@ class LinkedAccountInfo(BaseModel):
 
 class OAuthLinksResponse(BaseModel):
     """Response for GET /auth/oauth/links."""
-    links: List[LinkedAccountInfo] = Field(
+    accounts: List[LinkedAccountInfo] = Field(
         ...,
         description="List of linked social accounts"
+    )
+    has_usable_password: bool = Field(
+        ...,
+        description="Whether the user has a usable password"
     )
 
 
@@ -119,6 +129,7 @@ class OAuthLinkSuccessResponse(BaseModel):
     """Response for successful account linking."""
     success: bool = True
     provider: str = Field(..., description="Provider that was linked")
+    account: LinkedAccountInfo = Field(..., description="Linked account info")
     message: str = Field(
         "Social account linked successfully",
         description="Success message"

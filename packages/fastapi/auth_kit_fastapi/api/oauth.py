@@ -11,6 +11,8 @@ Provides endpoints for:
 """
 
 from datetime import datetime, timedelta, timezone
+import base64
+import hashlib
 from typing import Optional
 from uuid import UUID
 
@@ -19,7 +21,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from ..core.database import get_db
-from ..core.dependencies import get_current_user, get_current_active_user, get_config
+from ..core.dependencies import get_current_active_user, get_config
 from ..core.oauth_state import (
     create_state_for_authorize,
     verify_state_for_callback,
@@ -32,7 +34,7 @@ from ..core.security import create_access_token, create_refresh_token
 from ..core.events import auth_events
 from ..models.user import BaseUser
 from ..models.social_account import SocialAccount
-from ..services.oauth.providers import get_provider, get_available_providers
+from ..services.oauth.providers import get_provider
 from ..services.oauth.providers.base import OAuthProviderError
 from ..schemas.oauth import (
     OAuthProvidersResponse,
@@ -44,11 +46,52 @@ from ..schemas.oauth import (
     LinkedAccountInfo,
     OAuthLinkSuccessResponse,
     OAuthUnlinkSuccessResponse,
-    OAuthErrorResponse,
 )
 from ..schemas.auth import LoginResponse, UserResponse, TokenResponse
 
 router = APIRouter()
+
+
+def _get_provider_info_map(config) -> dict:
+    providers = config.get_social_provider_info()
+    return {provider["name"]: provider for provider in providers}
+
+
+def _require_enabled_provider(provider: str, config) -> str:
+    provider = provider.lower()
+    provider_info = _get_provider_info_map(config)
+    info = provider_info.get(provider)
+    if not info:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"OAuth provider '{provider}' is not enabled",
+        )
+    if not info.get("enabled"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"OAuth provider '{provider}' is not configured",
+        )
+    return provider
+
+
+def _base64url_sha256(value: str) -> str:
+    digest = hashlib.sha256(value.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+def _verify_pkce_binding(state_payload: dict, code_verifier: str) -> None:
+    expected_challenge = state_payload.get("cc")
+    if not expected_challenge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OAuth state missing code challenge",
+        )
+    actual_challenge = _base64url_sha256(code_verifier)
+    if actual_challenge != expected_challenge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="PKCE verification failed",
+        )
 
 
 @router.get("/providers", response_model=OAuthProvidersResponse)
@@ -60,7 +103,7 @@ async def get_providers(
 
     Returns the providers configured for this application.
     """
-    providers = config.get_social_providers()
+    providers = config.get_social_provider_info()
     return OAuthProvidersResponse(providers=providers)
 
 
@@ -80,13 +123,8 @@ async def authorize(
 
     For link mode, the user must be authenticated (provide Authorization header).
     """
-    # Validate provider is enabled
-    enabled_providers = config.get_social_providers()
-    if provider not in enabled_providers:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"OAuth provider '{provider}' is not enabled",
-        )
+    # Validate provider is enabled/configured
+    provider = _require_enabled_provider(provider, config)
 
     # Validate PKCE method
     if request_data.code_challenge_method != "S256":
@@ -111,6 +149,8 @@ async def authorize(
         try:
             payload = decode_token(token, config.jwt_secret, config.jwt_algorithm)
             link_user_id = payload.get("sub")
+            if payload.get("type") != "access":
+                raise ValueError("Invalid token type")
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -150,6 +190,7 @@ async def authorize(
         provider=provider,
         authorization_url=authorization_url,
         state=state,
+        code_challenge=request_data.code_challenge,
     )
 
 
@@ -169,13 +210,8 @@ async def callback(
 
     Returns the same LoginResponse as password login for consistency.
     """
-    # Validate provider is enabled
-    enabled_providers = config.get_social_providers()
-    if provider not in enabled_providers:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"OAuth provider '{provider}' is not enabled",
-        )
+    # Validate provider is enabled/configured
+    provider = _require_enabled_provider(provider, config)
 
     # Verify state token
     signing_key = config.get_oauth_state_signing_key()
@@ -208,6 +244,8 @@ async def callback(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Use /oauth/links/{provider}/link endpoint for account linking",
         )
+
+    _verify_pkce_binding(state_payload, request_data.code_verifier)
 
     # Get provider instance
     try:
@@ -262,17 +300,37 @@ async def callback(
         user = db.query(User).filter(User.email == profile.email).first()
 
         if user:
-            # Link social account to existing user
-            social_account = _create_social_account(
-                db, user.id, provider, profile, tokens, config
-            )
+            # Link social account to existing user (if not already linked)
+            existing_provider_link = db.query(SocialAccount).filter(
+                SocialAccount.user_id == user.id,
+                SocialAccount.provider == provider,
+            ).first()
+
+            if existing_provider_link:
+                if existing_provider_link.provider_user_id != profile.provider_user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=f"A different {provider} account is already linked to this user",
+                    )
+                social_account = existing_provider_link
+            else:
+                try:
+                    social_account = _create_social_account(
+                        db, user.id, provider, profile, tokens, config
+                    )
+                except IntegrityError:
+                    db.rollback()
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=f"This {provider} account is already linked",
+                    )
         else:
             # Create new user
             user = User(
                 email=profile.email,
                 first_name=profile.username,
                 is_active=True,
-                is_verified=True,  # Email verified by OAuth provider
+                is_verified=bool(profile.email_verified),
                 has_usable_password=False,  # Social-only user
                 hashed_password="",  # No password
             )
@@ -360,18 +418,19 @@ async def get_links(
         SocialAccount.user_id == current_user.id
     ).all()
 
-    links = [
+    accounts = [
         LinkedAccountInfo(
-            id=sa.id,
             provider=sa.provider,
+            provider_user_id=sa.provider_user_id,
             provider_email=sa.provider_email,
             provider_username=sa.provider_username,
-            created_at=sa.created_at,
+            linked_at=sa.created_at,
         )
         for sa in social_accounts
     ]
 
-    return OAuthLinksResponse(links=links)
+    has_password = getattr(current_user, "has_usable_password", True)
+    return OAuthLinksResponse(accounts=accounts, has_usable_password=has_password)
 
 
 @router.post("/links/{provider}/link", response_model=OAuthLinkSuccessResponse)
@@ -387,13 +446,8 @@ async def link_account(
 
     Exchanges the OAuth code and links the provider identity to this user.
     """
-    # Validate provider is enabled
-    enabled_providers = config.get_social_providers()
-    if provider not in enabled_providers:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"OAuth provider '{provider}' is not enabled",
-        )
+    # Validate provider is enabled/configured
+    provider = _require_enabled_provider(provider, config)
 
     # Verify state token
     signing_key = config.get_oauth_state_signing_key()
@@ -422,6 +476,8 @@ async def link_account(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="State was created for a different user",
         )
+
+    _verify_pkce_binding(state_payload, request_data.code_verifier)
 
     # Check if user already has this provider linked
     existing = db.query(SocialAccount).filter(
@@ -471,7 +527,7 @@ async def link_account(
 
     # Create social account link
     try:
-        _create_social_account(
+        social_account = _create_social_account(
             db, current_user.id, provider, profile, tokens, config
         )
     except IntegrityError:
@@ -487,7 +543,15 @@ async def link_account(
         "provider": provider,
     })
 
-    return OAuthLinkSuccessResponse(provider=provider)
+    account_info = LinkedAccountInfo(
+        provider=social_account.provider,
+        provider_user_id=social_account.provider_user_id,
+        provider_email=social_account.provider_email,
+        provider_username=social_account.provider_username,
+        linked_at=social_account.created_at,
+    )
+
+    return OAuthLinkSuccessResponse(provider=provider, account=account_info)
 
 
 @router.delete("/links/{provider}", response_model=OAuthUnlinkSuccessResponse)
@@ -502,6 +566,8 @@ async def unlink_account(
 
     Prevents unlinking if it would leave the user with no way to log in.
     """
+    provider = provider.lower()
+
     # Find the social account
     social_account = db.query(SocialAccount).filter(
         SocialAccount.user_id == current_user.id,
