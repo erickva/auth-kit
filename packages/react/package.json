@@ -1,6 +1,6 @@
 {
   "name": "@erickva/auth-kit-react",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "React components and hooks for Auth Kit",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -31,7 +31,7 @@
     "react-dom": ">=16.8.0"
   },
   "dependencies": {
-    "@erickva/auth-kit-core": "^0.2.0",
+    "@erickva/auth-kit-core": "^0.3.0",
     "@simplewebauthn/browser": "^8.0.0"
   },
   "devDependencies": {
@@ -56,5 +56,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "7473a469692708b14eb996a6189f79b8e89bb99b"
+  "gitHead": "b9d8b0428ca91763938643a6c8aea2837769df17"
 }

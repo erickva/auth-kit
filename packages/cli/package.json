@@ -1,6 +1,6 @@
 {
   "name": "@erickva/auth-kit-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI tool for scaffolding Auth Kit projects",
   "bin": {
     "auth-kit": "./dist/index.js",
@@ -55,5 +55,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "gitHead": "b9d8b0428ca91763938643a6c8aea2837769df17"
 }
