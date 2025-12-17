@@ -418,8 +418,27 @@ async def delete_passkey(
     passkey_count = db.query(UserCredential).filter(
         UserCredential.user_id == current_user.id
     ).count()
-    
-    if passkey_count == 1 and not current_user.hashed_password:
+
+    # Count linked social accounts if available
+    social_count = 0
+    try:
+        from ..models.social_account import SocialAccount
+        social_count = db.query(SocialAccount).filter(
+            SocialAccount.user_id == current_user.id
+        ).count()
+    except Exception:
+        pass
+
+    has_password = getattr(
+        current_user,
+        "has_usable_password",
+        bool(getattr(current_user, "hashed_password", None))
+    )
+
+    remaining_passkeys = passkey_count - 1
+    remaining_auth_methods = remaining_passkeys + social_count + (1 if has_password else 0)
+
+    if remaining_auth_methods == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot delete last authentication method"

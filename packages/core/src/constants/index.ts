@@ -9,7 +9,10 @@ export const DEFAULT_STORAGE_KEYS = {
   USER: 'auth_user',
   RETURN_URL: 'auth_return_url',
   DEVICE_ID: 'auth_device_id',
-  REMEMBER_ME: 'auth_remember_me'
+  REMEMBER_ME: 'auth_remember_me',
+  // OAuth PKCE storage prefix (state appended as suffix)
+  OAUTH_PKCE_PREFIX: 'auth_oauth_pkce_',
+  OAUTH_STATE_PREFIX: 'auth_oauth_state_'
 } as const;
 
 // API endpoints
@@ -36,7 +39,14 @@ export const DEFAULT_ENDPOINTS = {
   TWO_FACTOR_SETUP_VERIFY: '/auth/2fa/setup/verify',
   TWO_FACTOR_DISABLE: '/auth/2fa/disable',
   TWO_FACTOR_VERIFY_LOGIN: '/auth/2fa/verify/login',
-  TWO_FACTOR_RECOVERY_CODES: '/auth/2fa/recovery-codes'
+  TWO_FACTOR_RECOVERY_CODES: '/auth/2fa/recovery-codes',
+  // OAuth endpoints
+  OAUTH_PROVIDERS: '/auth/oauth/providers',
+  OAUTH_AUTHORIZE: '/auth/oauth/:provider/authorize',
+  OAUTH_CALLBACK: '/auth/oauth/:provider/callback',
+  OAUTH_LINKS: '/auth/oauth/links',
+  OAUTH_LINK_PROVIDER: '/auth/oauth/links/:provider/link',
+  OAUTH_UNLINK_PROVIDER: '/auth/oauth/links/:provider'
 } as const;
 
 // Token settings
@@ -101,7 +111,15 @@ export const ERROR_CODES = {
   PASSKEY_NOT_SUPPORTED: 'PASSKEY_NOT_SUPPORTED',
   PASSKEY_REGISTRATION_FAILED: 'PASSKEY_REGISTRATION_FAILED',
   PASSKEY_AUTHENTICATION_FAILED: 'PASSKEY_AUTHENTICATION_FAILED',
-  
+
+  // OAuth errors
+  OAUTH_INVALID_STATE: 'OAUTH_INVALID_STATE',
+  OAUTH_PROVIDER_ERROR: 'OAUTH_PROVIDER_ERROR',
+  OAUTH_ACCOUNT_EXISTS: 'OAUTH_ACCOUNT_EXISTS',
+  OAUTH_LINK_FAILED: 'OAUTH_LINK_FAILED',
+  OAUTH_UNLINK_FAILED: 'OAUTH_UNLINK_FAILED',
+  OAUTH_LAST_AUTH_METHOD: 'OAUTH_LAST_AUTH_METHOD',
+
   // Network errors
   NETWORK_ERROR: 'NETWORK_ERROR',
   SERVER_ERROR: 'SERVER_ERROR',
@@ -125,5 +143,8 @@ export const SUCCESS_MESSAGES = {
   TWO_FACTOR_ENABLED: 'Two-factor authentication enabled',
   TWO_FACTOR_DISABLED: 'Two-factor authentication disabled',
   PASSKEY_ADDED: 'Passkey added successfully',
-  PASSKEY_REMOVED: 'Passkey removed successfully'
+  PASSKEY_REMOVED: 'Passkey removed successfully',
+  OAUTH_ACCOUNT_LINKED: 'Social account linked successfully',
+  OAUTH_ACCOUNT_UNLINKED: 'Social account unlinked successfully',
+  OAUTH_LOGIN_SUCCESS: 'Successfully logged in with social account'
 } as const;

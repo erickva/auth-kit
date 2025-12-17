@@ -42,6 +42,9 @@ class BaseUser(Base):
     two_factor_enabled = Column(Boolean, default=False, nullable=False)
     two_factor_secret = Column(String(255), nullable=True)
     two_factor_recovery_codes = Column(Text, nullable=True)  # JSON array
+
+    # Password usability (False for social-only users who haven't set a password)
+    has_usable_password = Column(Boolean, default=True, nullable=False)
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -96,6 +99,7 @@ class BaseUser(Base):
             "is_verified": self.is_verified,
             "is_superuser": self.is_superuser,
             "two_factor_enabled": self.two_factor_enabled,
+            "has_usable_password": self.has_usable_password,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "last_login_at": self.last_login_at.isoformat() if self.last_login_at else None,

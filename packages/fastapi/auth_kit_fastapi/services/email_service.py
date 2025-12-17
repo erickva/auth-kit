@@ -16,7 +16,7 @@ from ..core.security import (
     generate_password_reset_token
 )
 from ..core.events import auth_events
-from ..config import AuthConfig
+from ..core.config import AuthConfig
 
 logger = logging.getLogger(__name__)
 

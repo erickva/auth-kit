@@ -43,6 +43,20 @@ from .two_factor import (
     TwoFactorStatusResponse
 )
 
+from .oauth import (
+    OAuthProviderInfo,
+    OAuthProvidersResponse,
+    OAuthAuthorizeRequest,
+    OAuthAuthorizeResponse,
+    OAuthCallbackRequest,
+    OAuthLinkRequest,
+    LinkedAccountInfo,
+    OAuthLinksResponse,
+    OAuthLinkSuccessResponse,
+    OAuthUnlinkSuccessResponse,
+    OAuthErrorResponse,
+)
+
 __all__ = [
     # Auth schemas
     "UserBase",
@@ -80,5 +94,18 @@ __all__ = [
     "RecoveryCodesRegenerateRequest",
     "RecoveryCodesResponse",
     "TwoFactorLoginVerifyRequest",
-    "TwoFactorStatusResponse"
+    "TwoFactorStatusResponse",
+
+    # OAuth schemas
+    "OAuthProviderInfo",
+    "OAuthProvidersResponse",
+    "OAuthAuthorizeRequest",
+    "OAuthAuthorizeResponse",
+    "OAuthCallbackRequest",
+    "OAuthLinkRequest",
+    "LinkedAccountInfo",
+    "OAuthLinksResponse",
+    "OAuthLinkSuccessResponse",
+    "OAuthUnlinkSuccessResponse",
+    "OAuthErrorResponse",
 ]
