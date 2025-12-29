@@ -66,13 +66,15 @@ export function AuthProvider({ children, config, onAuthStateChange }: AuthProvid
     const loadUser = async () => {
       try {
         const tokenKey = config.storage?.tokenKey || DEFAULT_STORAGE_KEYS.ACCESS_TOKEN;
+        const refreshTokenKey = config.storage?.refreshTokenKey || DEFAULT_STORAGE_KEYS.REFRESH_TOKEN;
         const userKey = config.storage?.userKey || DEFAULT_STORAGE_KEYS.USER;
-        
+
         const token = storage.getItem(tokenKey);
+        const refreshToken = storage.getItem(refreshTokenKey);
         const savedUser = storage.getItem(userKey);
 
         if (token && savedUser && !isTokenExpired(token)) {
-          // Validate token with backend
+          // Token is valid - validate with backend
           try {
             const currentUser = await authAPI.validateToken(token);
             if (currentUser) {
@@ -83,23 +85,66 @@ export function AuthProvider({ children, config, onAuthStateChange }: AuthProvid
                 accessToken: token,
                 error: null
               });
-              
+
               // Initialize token manager
               tokenManager.initialize(token, storage, config);
-              
+
               // Emit login event
               authEvents.emit('login', currentUser);
               config.events?.onLogin?.(currentUser);
               onAuthStateChange?.(currentUser);
-              
+
               return;
             }
           } catch (error) {
-            // Token invalid, clear storage
+            // Token invalid, try to refresh
+            console.log('Token validation failed, attempting refresh...');
+          }
+        }
+
+        // Token expired or validation failed - try to refresh using refresh token
+        if (refreshToken && savedUser) {
+          try {
+            console.log('Attempting to refresh expired token...');
+            const tokens = await authAPI.refreshToken(refreshToken);
+
+            // Save new tokens
+            storage.setItem(tokenKey, tokens.accessToken);
+            if (tokens.refreshToken) {
+              storage.setItem(refreshTokenKey, tokens.refreshToken);
+            }
+
+            // Validate new token and get user
+            const currentUser = await authAPI.validateToken(tokens.accessToken);
+            if (currentUser) {
+              setState({
+                user: currentUser,
+                isLoading: false,
+                isAuthenticated: true,
+                accessToken: tokens.accessToken,
+                error: null
+              });
+
+              // Initialize token manager with new token
+              tokenManager.initialize(tokens.accessToken, storage, config);
+
+              // Emit events
+              authEvents.emit('tokenRefresh', { accessToken: tokens.accessToken });
+              authEvents.emit('login', currentUser);
+              config.events?.onLogin?.(currentUser);
+              config.events?.onTokenRefresh?.(tokens);
+              onAuthStateChange?.(currentUser);
+
+              console.log('Token refreshed successfully on load');
+              return;
+            }
+          } catch (error) {
+            // Refresh failed - clear auth data
+            console.error('Token refresh failed on load:', error);
             clearAuthData();
           }
         }
-        
+
         setState(prev => ({ ...prev, isLoading: false }));
       } catch (error) {
         console.error('Error loading user:', error);
