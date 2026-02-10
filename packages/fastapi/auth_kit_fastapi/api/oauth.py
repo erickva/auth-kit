@@ -368,7 +368,7 @@ async def callback(
 
     # Generate tokens
     access_token = create_access_token(
-        data={"sub": str(user.id), "type": token_type},
+        data={"sub": str(user.id), "email": user.email, "type": token_type},
         secret_key=config.jwt_secret,
         algorithm=config.jwt_algorithm,
         expires_delta=timedelta(minutes=config.access_token_expire_minutes),

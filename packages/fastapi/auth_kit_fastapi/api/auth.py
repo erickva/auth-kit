@@ -145,12 +145,12 @@ async def login(
     refresh_token_expires = timedelta(days=config.refresh_token_expire_days)
     
     access_token = create_access_token(
-        {"sub": str(user.id)},
+        {"sub": str(user.id), "email": user.email},
         config.jwt_secret,
         config.jwt_algorithm,
         expires_delta=access_token_expires
     )
-    
+
     refresh_token, jti = create_refresh_token(
         {"sub": str(user.id)},
         config.jwt_secret,
@@ -232,7 +232,7 @@ async def refresh_token(
         # Create new access token
         access_token_expires = timedelta(minutes=config.access_token_expire_minutes)
         access_token = create_access_token(
-            {"sub": str(user.id)},
+            {"sub": str(user.id), "email": user.email},
             config.jwt_secret,
             config.jwt_algorithm,
             expires_delta=access_token_expires

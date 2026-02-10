@@ -325,7 +325,7 @@ async def verify_2fa_login(
     refresh_token_expires = timedelta(days=config.refresh_token_expire_days)
     
     access_token = create_access_token(
-        {"sub": str(user.id)},
+        {"sub": str(user.id), "email": user.email},
         config.jwt_secret,
         config.jwt_algorithm,
         expires_delta=access_token_expires
